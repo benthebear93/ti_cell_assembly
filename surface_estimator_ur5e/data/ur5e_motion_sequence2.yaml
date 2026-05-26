@@ -1,0 +1,131 @@
+initial_start_pose:
+  q_deg: [36.50, -16.37, -80.20, 6.52, 89.87, 136.93]
+
+before_pick:
+  q_deg: [43.94, -24.55, -71.78, 6.29, 89.88, 136.04]
+
+close_gripper_60:
+  gripper_percent: 75
+  speed: 80
+  force: 100
+  wait: true
+  timeout_s: 8.0
+  post_dwell_s: 1.0
+
+after_pickup_move_up:
+  q_deg: [34.22, -9.82, -79.93, -28.55, 70.16, 149.92]
+
+move_for_insert_1:
+  q_deg: [34.10, -25.41, -55.02, -63.01, 60.36, 158.58]
+
+# move_for_insert_2:
+#   q_deg: [50.26, -29.98, -27.65, -70.00, 49.95, 148.72]
+
+move_for_insert_3:
+  q_deg: [40.07, -30.03, -52.58, -62.07, 52.15, 162.46]
+
+holder_insertion:
+  tool_movel_offsets_m:
+    - [0.0, 0.0, 0.015]
+  speed_m_s: 0.005
+  acceleration_m_s2: 0.01
+  dwell_s: 0.2
+
+# move_for_insert_4:
+#   q_deg: [41.09, -31.16, -51.92, -61.18, 51.31, 161.70]
+
+# move_for_insert_5:
+#   q_deg: [41.18, -25.88, -54.66, -63.58, 57.25, 169.01]
+
+# move_for_insert_5:
+#   q_deg: [43, -25.44, -54.78, -74.97, 51.88, 169.01]
+
+# tcp_x_jiggle:
+#   tool_movel_offsets_m:
+#     - [0.002, 0.0, 0.0]
+#     - [-0.002, 0.0, 0.0]
+#     - [0.002, 0.0, 0.0]
+#     - [-0.002, 0.0, 0.0]
+#   speed_m_s: 0.005
+#   acceleration_m_s2: 0.01
+#   dwell_s: 0.1
+
+# tcp_x_jiggle:
+#   tool_movel_offsets_m:
+#     - [0, 0.002, 0.0]
+#     - [0, -0.002, 0.0]
+#     - [0, 0.002, 0.0]
+#     - [0, -0.002, 0.0]
+#   speed_m_s: 0.005
+#   acceleration_m_s2: 0.01
+#   dwell_s: 0.1
+  
+open_gripper:
+  gripper_percent: 0
+  speed: 80
+  force: 80
+  wait: true
+  timeout_s: 8.0
+  post_dwell_s: 1.0
+
+move_out:
+  q_deg: [33.65, -21.01, -68.61, -56.63, 56.61, 165.71]
+
+approach_ti:
+  q_deg: [39.43, -23.18, -70.36, -50.44, 53.14, 159.35]
+
+close_gripper_60_after_approach_ti:
+  gripper_percent: 70
+  speed: 40
+  force: 100
+  wait: true
+  timeout_s: 8.0
+  post_dwell_s: 1.0
+
+approach_ti_move_out_30mm:
+  tool_movel_offsets_m:
+    - [0.0, 0.0, -0.030]
+  speed_m_s: 0.01
+  acceleration_m_s2: 0.02
+  dwell_s: 0.2
+
+before_ti_insertion:
+  tool_movel_offsets_m:
+    - [-0.0575, 0.0, 0.0]
+  speed_m_s: 0.01
+  acceleration_m_s2: 0.02
+  dwell_s: 0.2
+
+adjust_before_insert:
+  q_deg: [43.07, -22.68, -62.59, -58.06, 49.72, 156.66]
+
+ti_insertion:
+  tool_movel_offsets_m:
+    - [0.0, 0.0, 0.006]
+  speed_m_s: 0.005
+  acceleration_m_s2: 0.01
+  dwell_s: 0.2
+# final_move_out:
+#   q_deg: [55.45, -42.41, 1.53, -102.05, 46.49, 151.90]
+open_gripper_after_ti_insert:
+  gripper_percent: 0
+  speed: 80
+  force: 80
+  wait: true
+  timeout_s: 8.0
+  post_dwell_s: 1.0
+
+move_out_ti:
+  q_deg: [40.19, -11.71, -69.94, -58.35, 60.54, 156.30]
+
+move_out_ti2:
+  q_deg: [44.27, 10.20, -112.94, -9.77, 64.98, 148.24]
+
+move_out_ti3:
+  q_deg: [87.17, -2.13, -100.62, 7.71, 106.77, 90.68]
+
+move_out_ti4:
+  q_deg: [76.68, -0.32, -102.52, 7.71, 107.71, 90.68]
+
+move_out_ti5:
+  q_deg: [73.91, -6.75, -96.12, 7.63, 107.35, 90.71]

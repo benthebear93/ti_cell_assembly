@@ -1,0 +1,9 @@
+numpy>=1.24
+scipy>=1.10
+pyyaml>=6.0
+viser>=0.2.0
+trimesh>=4.0
+yourdfpy>=0.0.56
+robot-descriptions>=1.20.0
+xacrodoc>=0.3.0
+ur-rtde>=1.6.0

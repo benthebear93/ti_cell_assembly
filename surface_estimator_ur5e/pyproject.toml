@@ -1,0 +1,31 @@
+[project]
+name = "surface-estimator-ur5e"
+version = "0.1.0"
+description = "Offline planar surface estimation from UR5e contact poses with viser visualization."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pyyaml>=6.0",
+    "viser>=0.2.0",
+    "trimesh>=4.0",
+    "yourdfpy>=0.0.56",
+    "robot-descriptions>=1.20.0",
+    "xacrodoc>=0.3.0",
+    "ur-rtde>=1.6.0",
+]
+
+[project.scripts]
+surface-estimator = "surface_estimator_ur5e.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

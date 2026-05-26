@@ -1,0 +1,122 @@
+robot:
+  name: ur5e_hande
+  base_frame: robot_base
+  tool_frame: tcp
+  pose_convention: ur_polyscope_xyz_rotvec
+  joint_units_original: deg
+  joint_order:
+  - shoulder_pan_joint
+  - shoulder_lift_joint
+  - elbow_joint
+  - wrist_1_joint
+  - wrist_2_joint
+  - wrist_3_joint
+tool:
+  contact_offset_m:
+  - 0.0
+  - 0.0
+  - 0.0
+  note: Set nonzero if the displayed TCP pose is not the actual physical contact point.
+surface_estimation:
+  normal_direction: auto
+  flip_normal: false
+contacts:
+- name: contact_1
+  q_deg:
+  - 50.88
+  - -26.94
+  - -74.7
+  - 14.68
+  - 88.77
+  - -37.7
+  q_rad:
+  - 0.8880235234
+  - -0.4701917005
+  - -1.3037609512
+  - 0.2562143342
+  - 1.549328777
+  - -0.657989128
+  tcp_position_m:
+  - -0.15409
+  - -0.40755
+  - 0.98596
+  tcp_position_mm:
+  - -154.09
+  - -407.55
+  - 985.96
+  tcp_rotation_vector_rad:
+  - 0.059
+  - 0.02
+  - -1.339
+  tcp_orientation_xyzw:
+  - 0.0273405082
+  - 0.0092679689
+  - -0.6204905156
+  - 0.7836824111
+  note: manual perpendicular surface contact from UR teach pendant
+- name: contact_2
+  q_deg:
+  - 30.54
+  - -25.88
+  - -58.73
+  - -2.92
+  - 87.78
+  - -17.36
+  q_rad:
+  - 0.5330235536
+  - -0.4516912104
+  - -1.0250318697
+  - -0.0509636142
+  - 1.5320500174
+  - -0.3029891581
+  tcp_position_m:
+  - -0.38467
+  - -0.39203
+  - 0.98617
+  tcp_position_mm:
+  - -384.67
+  - -392.03
+  - 986.17
+  tcp_rotation_vector_rad:
+  - 0.059
+  - 0.02
+  - -1.339
+  tcp_orientation_xyzw:
+  - 0.0273405082
+  - 0.0092679689
+  - -0.6204905156
+  - 0.7836824111
+  note: manual perpendicular surface contact from UR teach pendant
+- name: contact_3
+  q_deg:
+  - 18.76
+  - -28.4
+  - -77.96
+  - 18.34
+  - 87.28
+  - -5.59
+  q_rad:
+  - 0.3274237677
+  - -0.4956735076
+  - -1.3606586849
+  - 0.3200933848
+  - 1.5233233711
+  - -0.0975639052
+  tcp_position_m:
+  - -0.3063
+  - -0.25615
+  - 0.98963
+  tcp_position_mm:
+  - -306.3
+  - -256.15
+  - 989.63
+  tcp_rotation_vector_rad:
+  - 0.059
+  - 0.02
+  - -1.339
+  tcp_orientation_xyzw:
+  - 0.0273405082
+  - 0.0092679689
+  - -0.6204905156
+  - 0.7836824111
+  note: manual perpendicular surface contact from UR teach pendant

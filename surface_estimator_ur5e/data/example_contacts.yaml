@@ -1,0 +1,46 @@
+robot:
+  name: ur5e_hande
+  base_frame: robot_base
+  tool_frame: tcp
+  pose_convention: xyz_quat_xyzw
+  joint_order:
+    - shoulder_pan_joint
+    - shoulder_lift_joint
+    - elbow_joint
+    - wrist_1_joint
+    - wrist_2_joint
+    - wrist_3_joint
+
+tool:
+  # Optional TCP/contact offset expressed in the end-effector frame.
+  # If the recorded Cartesian pose already corresponds to the actual contact point,
+  # set this to [0, 0, 0].
+  contact_offset_m: [0.0, 0.0, 0.0]
+
+normal_direction: auto
+flip_normal: false
+
+contacts:
+  - name: contact_1
+    q_rad: [0.0, -1.57, 1.57, -1.57, -1.57, 0.0]
+    tcp_position_m: [0.40, 0.10, -1.20]
+    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
+    note: "first floor contact"
+
+  - name: contact_2
+    q_rad: [0.1, -1.50, 1.45, -1.55, -1.57, 0.0]
+    tcp_position_m: [0.60, -0.15, -1.22]
+    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
+    note: "second floor contact"
+
+  - name: contact_3
+    q_rad: [-0.1, -1.60, 1.60, -1.50, -1.57, 0.0]
+    tcp_position_m: [0.20, -0.20, -1.19]
+    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
+    note: "third floor contact"
+
+  - name: contact_4
+    q_rad: [0.18, -1.48, 1.42, -1.58, -1.57, 0.05]
+    tcp_position_m: [0.72, 0.18, -1.225]
+    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
+    note: "extra point for best-fit plane"
