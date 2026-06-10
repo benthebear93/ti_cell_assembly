@@ -20,3 +20,19 @@ Good sources are:
 - Robotiq Hand-E description package: https://github.com/macmacal/robotiq_hande_description
 
 Make sure mesh paths inside the URDF are relative to the URDF location or otherwise resolvable by `yourdfpy`.
+
+The MuJoCo exporter currently looks for local assets at:
+
+- `assets/universal_robots_ur5e/ur5e.xml`
+- `assets/robotiq_hande_description/meshes/io_coupler.obj`
+- `assets/robotiq_hande_description/meshes/hande.obj`
+- `assets/robotiq_hande_description/meshes/finger.obj`
+- `assets/ti_tray/mujoco_parts/ti_tray_part_*.obj`
+
+The Hand-E OBJ files were converted from the upstream DAE meshes because MuJoCo
+loads OBJ meshes directly. The upstream Apache-2.0 license is kept at
+`assets/robotiq_hande_description/LICENSE`.
+
+The TI tray is split into connected-component OBJ parts for MuJoCo. Loading the
+original `assets/ti_tray/ti_tray.obj` as one mesh caused MuJoCo to simplify it
+into a small hull, losing the visible plate shape.

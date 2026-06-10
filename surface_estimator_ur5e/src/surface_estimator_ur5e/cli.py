@@ -16,6 +16,15 @@ from surface_estimator_ur5e.live_robot import (
     append_contact_capture,
     capture_current_pose,
 )
+from surface_estimator_ur5e.mujoco_control import (
+    launch_mujoco_control_viewer,
+    launch_mujoco_grasp_demo,
+)
+from surface_estimator_ur5e.mujoco_scene import (
+    write_mujoco_control_scene,
+    write_mujoco_grasp_scene,
+    write_mujoco_scene,
+)
 from surface_estimator_ur5e.motion_sequence import (
     DEFAULT_GRIPPER_PORT,
     DEFAULT_TCP_OFFSET_UR,
@@ -32,7 +41,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="surface-estimator")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    for command in ("estimate", "visualize", "validate"):
+    for command in (
+        "estimate",
+        "visualize",
+        "validate",
+        "export-mujoco",
+        "export-mujoco-control",
+        "export-mujoco-grasp",
+    ):
         command_parser = subparsers.add_parser(command)
         command_parser.add_argument("--input", required=True, type=Path)
         command_parser.add_argument(
@@ -50,6 +66,79 @@ def main(argv: list[str] | None = None) -> int:
         command_parser.add_argument("--flip-normal", action="store_true")
 
     subparsers.choices["visualize"].add_argument("--selected-contact-index", type=int, default=0)
+    mujoco_parser = subparsers.choices["export-mujoco"]
+    mujoco_parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("models/ur5e_hande_table_scene.xml"),
+    )
+    mujoco_parser.add_argument("--selected-contact-index", type=int, default=0)
+    mujoco_parser.add_argument("--table-margin-m", type=float, default=0.18)
+    mujoco_parser.add_argument("--table-thickness-m", type=float, default=0.05)
+    mujoco_parser.add_argument("--min-table-half-extent-m", type=float, default=0.35)
+    mujoco_parser.add_argument("--compile-check", action="store_true")
+
+    mujoco_control_parser = subparsers.choices["export-mujoco-control"]
+    mujoco_control_parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("models/ur5e_hande_table_control_scene.xml"),
+    )
+    mujoco_control_parser.add_argument("--selected-contact-index", type=int, default=0)
+    mujoco_control_parser.add_argument("--table-margin-m", type=float, default=0.18)
+    mujoco_control_parser.add_argument("--table-thickness-m", type=float, default=0.05)
+    mujoco_control_parser.add_argument("--min-table-half-extent-m", type=float, default=0.35)
+    mujoco_control_parser.add_argument("--compile-check", action="store_true")
+
+    mujoco_grasp_parser = subparsers.choices["export-mujoco-grasp"]
+    mujoco_grasp_parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("models/ur5e_hande_tray_grasp_scene.xml"),
+    )
+    mujoco_grasp_parser.add_argument("--selected-contact-index", type=int, default=0)
+    mujoco_grasp_parser.add_argument("--table-margin-m", type=float, default=0.18)
+    mujoco_grasp_parser.add_argument("--table-thickness-m", type=float, default=0.05)
+    mujoco_grasp_parser.add_argument("--min-table-half-extent-m", type=float, default=0.35)
+    mujoco_grasp_parser.add_argument(
+        "--tray-collision-mode",
+        choices=("mesh", "proxy", "both"),
+        default="proxy",
+    )
+    mujoco_grasp_parser.add_argument("--compile-check", action="store_true")
+
+    run_mujoco_control_parser = subparsers.add_parser("run-mujoco-control")
+    run_mujoco_control_parser.add_argument(
+        "--mjcf",
+        type=Path,
+        default=Path("models/ur5e_hande_table_control_scene.xml"),
+    )
+    run_mujoco_control_parser.add_argument("--keyframe", default="contact_1")
+    run_mujoco_control_parser.add_argument(
+        "--limit-mode",
+        choices=("error", "clamp", "ignore"),
+        default="error",
+    )
+
+    run_mujoco_grasp_parser = subparsers.add_parser("run-mujoco-grasp")
+    run_mujoco_grasp_parser.add_argument(
+        "--mjcf",
+        type=Path,
+        default=Path("models/ur5e_hande_tray_grasp_scene.xml"),
+    )
+    run_mujoco_grasp_parser.add_argument("--keyframe", default="grasp_open")
+    run_mujoco_grasp_parser.add_argument("--close-m", type=float, default=0.030)
+    run_mujoco_grasp_parser.add_argument("--lift-m", type=float, default=0.08)
+    run_mujoco_grasp_parser.add_argument(
+        "--attach-mode",
+        choices=("kinematic", "physics"),
+        default="physics",
+    )
+    run_mujoco_grasp_parser.add_argument(
+        "--limit-mode",
+        choices=("error", "clamp", "ignore"),
+        default="clamp",
+    )
 
     read_parser = subparsers.add_parser("read-robot")
     read_parser.add_argument("--robot-ip", default=DEFAULT_ROBOT_IP)
@@ -137,7 +226,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"captured: {contact['name']}")
             print(f"output: {args.output}")
             print(f"tcp_position_m: {_fmt(np.asarray(contact['tcp_position_m']))}")
-            print(f"tcp_rotation_vector_rad: {_fmt(np.asarray(contact['tcp_rotation_vector_rad']))}")
+            print(
+                "tcp_rotation_vector_rad: "
+                f"{_fmt(np.asarray(contact['tcp_rotation_vector_rad']))}"
+            )
             return 0
 
         if args.command == "run-sequence":
@@ -175,6 +267,25 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 0
 
+        if args.command == "run-mujoco-control":
+            launch_mujoco_control_viewer(
+                args.mjcf,
+                keyframe=args.keyframe,
+                limit_mode=args.limit_mode,
+            )
+            return 0
+
+        if args.command == "run-mujoco-grasp":
+            launch_mujoco_grasp_demo(
+                args.mjcf,
+                keyframe=args.keyframe,
+                close_m=args.close_m,
+                lift_m=args.lift_m,
+                limit_mode=args.limit_mode,
+                attach_mode=args.attach_mode,
+            )
+            return 0
+
         contact_data = _load_with_warnings(args.input)
         plane = _estimate(contact_data, args)
 
@@ -183,9 +294,82 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "visualize":
-            if args.selected_contact_index < 0 or args.selected_contact_index >= len(contact_data.contacts):
+            if (
+                args.selected_contact_index < 0
+                or args.selected_contact_index >= len(contact_data.contacts)
+            ):
                 raise ValueError("--selected-contact-index is out of range.")
             launch_visualization(contact_data, plane, args.selected_contact_index)
+            return 0
+
+        if args.command == "export-mujoco":
+            if (
+                args.selected_contact_index < 0
+                or args.selected_contact_index >= len(contact_data.contacts)
+            ):
+                raise ValueError("--selected-contact-index is out of range.")
+            metadata = write_mujoco_scene(
+                contact_data,
+                plane,
+                output_path=args.output,
+                selected_contact_index=args.selected_contact_index,
+                table_margin_m=args.table_margin_m,
+                table_thickness_m=args.table_thickness_m,
+                min_table_half_extent_m=args.min_table_half_extent_m,
+                compile_check=args.compile_check,
+            )
+            print(f"wrote MuJoCo scene: {metadata.output_path}")
+            print(f"fk source: {metadata.fk_source}")
+            print(f"table center: {_fmt(metadata.table_center_m)}")
+            print(f"table half extents: {_fmt(metadata.table_half_extents_m)}")
+            print(f"plane normal in MuJoCo world: {_fmt(metadata.plane_normal_world)}")
+            return 0
+
+        if args.command == "export-mujoco-control":
+            if (
+                args.selected_contact_index < 0
+                or args.selected_contact_index >= len(contact_data.contacts)
+            ):
+                raise ValueError("--selected-contact-index is out of range.")
+            metadata = write_mujoco_control_scene(
+                contact_data,
+                plane,
+                output_path=args.output,
+                selected_contact_index=args.selected_contact_index,
+                table_margin_m=args.table_margin_m,
+                table_thickness_m=args.table_thickness_m,
+                min_table_half_extent_m=args.min_table_half_extent_m,
+                compile_check=args.compile_check,
+            )
+            print(f"wrote actuated MuJoCo scene: {metadata.output_path}")
+            print(f"fk source: {metadata.fk_source}")
+            print(f"table center: {_fmt(metadata.table_center_m)}")
+            print(f"table half extents: {_fmt(metadata.table_half_extents_m)}")
+            print(f"plane normal in MuJoCo world: {_fmt(metadata.plane_normal_world)}")
+            return 0
+
+        if args.command == "export-mujoco-grasp":
+            if (
+                args.selected_contact_index < 0
+                or args.selected_contact_index >= len(contact_data.contacts)
+            ):
+                raise ValueError("--selected-contact-index is out of range.")
+            metadata = write_mujoco_grasp_scene(
+                contact_data,
+                plane,
+                output_path=args.output,
+                selected_contact_index=args.selected_contact_index,
+                table_margin_m=args.table_margin_m,
+                table_thickness_m=args.table_thickness_m,
+                min_table_half_extent_m=args.min_table_half_extent_m,
+                tray_collision_mode=args.tray_collision_mode,
+                compile_check=args.compile_check,
+            )
+            print(f"wrote MuJoCo grasp scene: {metadata.output_path}")
+            print(f"fk source: {metadata.fk_source}")
+            print(f"table center: {_fmt(metadata.table_center_m)}")
+            print(f"table half extents: {_fmt(metadata.table_half_extents_m)}")
+            print(f"plane normal in MuJoCo world: {_fmt(metadata.plane_normal_world)}")
             return 0
     except Exception as exc:
         print(f"error: {exc}", file=sys.stderr)

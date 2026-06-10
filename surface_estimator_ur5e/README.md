@@ -43,6 +43,11 @@ uv sync
 
 The main input format is YAML. See [data/example_contacts.yaml](data/example_contacts.yaml).
 
+The bundled example assumes the UR5e base frame is mounted on the ceiling and its
+positive Z direction points down toward the table. The table contact points are
+therefore around `z=+1.0m` in the robot base frame, while the visualizer displays
+that table below the ceiling mount.
+
 Each contact contains:
 
 - `q_rad`: UR5e joint pose in radians, ordered according to `robot.joint_order`
@@ -245,9 +250,33 @@ uv run python scripts/run_motion_sequence.py --execute
 
 This command sends `moveJ` commands through `RTDEControlInterface`. Keep the teach pendant/emergency stop reachable, use reduced mode if appropriate, and confirm the path is collision-free before adding `--execute`.
 
+## Export A MuJoCo Scene
+
+Generate a fixed MJCF scene with the ceiling-mounted UR5e, an attached Hand-E
+gripper, contact markers, a TI tray, and a table located at the estimated
+contact height:
+
+```bash
+uv run surface-estimator export-mujoco \
+  --input data/example_contacts.yaml \
+  --output models/ur5e_hande_table_scene.xml
+```
+
+The MuJoCo world uses the same display convention as the browser visualizer:
+the robot base is fixed at the ceiling origin `z=0`, and the fitted table is
+below it. The MuJoCo table is flattened to the robot-base plane so the ceiling
+mount and table are parallel; the raw fitted normal is still recorded in the
+generated XML comment. The generated scene is static; it is intended as a
+geometry/context model, not a collision-accurate actuated robot model. If the optional `mujoco`
+Python package is installed, add `--compile-check` to compile-check the MJCF
+before writing it.
+
 ## UR5e + Robotiq Hand-E Assets
 
-The default mesh source for the arm is `ur5e_description` from `robot_descriptions.py`, which references the Universal Robots description files. See [assets/README.md](assets/README.md) for optional local URDF asset placement and Robotiq Hand-E notes.
+The MuJoCo export uses the local UR5e MJCF meshes in `assets/universal_robots_ur5e`
+and the local Robotiq Hand-E OBJ meshes in `assets/robotiq_hande_description`
+when present. It also spawns `assets/ti_tray/ti_tray.obj` on the table if that
+mesh exists. See [assets/README.md](assets/README.md) for source and license notes.
 
 ## Limitations
 

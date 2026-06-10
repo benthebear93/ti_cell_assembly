@@ -17,30 +17,30 @@ tool:
   # set this to [0, 0, 0].
   contact_offset_m: [0.0, 0.0, 0.0]
 
-normal_direction: auto
+normal_direction: negative_z
 flip_normal: false
 
 contacts:
   - name: contact_1
-    q_rad: [0.0, -1.57, 1.57, -1.57, -1.57, 0.0]
-    tcp_position_m: [0.40, 0.10, -1.20]
-    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
-    note: "first floor contact"
+    q_rad: [0.8880235234, -0.4701917005, -1.3037609512, 0.2562143342, 1.549328777, -0.657989128]
+    tcp_position_m: [-0.15409, -0.40755, 0.98596]
+    tcp_orientation_xyzw: [0.0273405082, 0.0092679689, -0.6204905156, 0.7836824111]
+    note: "first table contact below ceiling-mounted robot"
 
   - name: contact_2
-    q_rad: [0.1, -1.50, 1.45, -1.55, -1.57, 0.0]
-    tcp_position_m: [0.60, -0.15, -1.22]
-    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
-    note: "second floor contact"
+    q_rad: [0.5330235536, -0.4516912104, -1.0250318697, -0.0509636142, 1.5320500174, -0.3029891581]
+    tcp_position_m: [-0.38467, -0.39203, 0.98617]
+    tcp_orientation_xyzw: [0.0273405082, 0.0092679689, -0.6204905156, 0.7836824111]
+    note: "second table contact below ceiling-mounted robot"
 
   - name: contact_3
-    q_rad: [-0.1, -1.60, 1.60, -1.50, -1.57, 0.0]
-    tcp_position_m: [0.20, -0.20, -1.19]
-    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
-    note: "third floor contact"
+    q_rad: [0.3274237677, -0.4956735076, -1.3606586849, 0.3200933848, 1.5233233711, -0.0975639052]
+    tcp_position_m: [-0.3063, -0.25615, 0.98963]
+    tcp_orientation_xyzw: [0.0273405082, 0.0092679689, -0.6204905156, 0.7836824111]
+    note: "third table contact below ceiling-mounted robot"
 
   - name: contact_4
-    q_rad: [0.18, -1.48, 1.42, -1.58, -1.57, 0.05]
-    tcp_position_m: [0.72, 0.18, -1.225]
-    tcp_orientation_xyzw: [0.0, 0.0, 0.0, 1.0]
-    note: "extra point for best-fit plane"
+    q_rad: [0.8772024821, -0.5232497097, -0.4825835382, -1.2217304764, 0.8717919614, 2.5956536636]
+    tcp_position_m: [-0.24233, -0.60362, 0.98001]
+    tcp_orientation_xyzw: [0.3455999199, 0.278281873, 0.659786699, 0.6064663274]
+    note: "fourth table contact below ceiling-mounted robot"

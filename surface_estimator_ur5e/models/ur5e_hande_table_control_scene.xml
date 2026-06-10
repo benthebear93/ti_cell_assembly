@@ -1,0 +1,214 @@
+<mujoco model="ceiling_ur5e_hande_table_control">
+  <compiler angle="radian" autolimits="true" coordinate="local" />
+  <option integrator="implicitfast" timestep="0.002" gravity="0 0 -9.81" />
+  <visual>
+    <headlight ambient="0.55 0.55 0.55" diffuse="0.45 0.45 0.45" specular="0.12 0.12 0.12" />
+    <rgba haze="1 1 1 1" />
+  </visual>
+  <statistic center="-0.271848 0.414837 -0.492721" extent="1.8" />
+  <default>
+    <default class="ur5e">
+      <material specular="0.5" shininess="0.25" />
+      <joint axis="0 1 0" range="-6.28319 6.28319" armature="0.1" />
+      <general gaintype="fixed" biastype="affine" ctrlrange="-6.2831 6.2831" gainprm="2000" biasprm="0 -2000 -400" forcerange="-150 150" />
+      <default class="size3">
+        <default class="size3_limited">
+          <joint range="-3.1415 3.1415" />
+          <general ctrlrange="-3.1415 3.1415" />
+        </default>
+      </default>
+      <default class="size1">
+        <general gainprm="500" biasprm="0 -500 -100" forcerange="-28 28" />
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" />
+      </default>
+      <default class="collision">
+        <geom type="capsule" group="3" />
+        <default class="eef_collision">
+          <geom type="cylinder" />
+        </default>
+      </default>
+      <site size="0.001" rgba="0.5 0.5 0.5 0.3" group="4" />
+    </default>
+  </default>
+  <asset>
+    <material class="ur5e" name="black" rgba="0.033 0.033 0.033 1" />
+    <material class="ur5e" name="jointgray" rgba="0.278 0.278 0.278 1" />
+    <material class="ur5e" name="linkgray" rgba="0.82 0.82 0.82 1" />
+    <material class="ur5e" name="urblue" rgba="0.49 0.678 0.8 1" />
+    <mesh file="../assets/universal_robots_ur5e/assets/base_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/base_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/shoulder_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/shoulder_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/shoulder_2.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/upperarm_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/upperarm_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/upperarm_2.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/upperarm_3.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/forearm_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/forearm_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/forearm_2.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/forearm_3.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist1_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist1_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist1_2.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist2_0.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist2_1.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist2_2.obj" />
+    <mesh file="../assets/universal_robots_ur5e/assets/wrist3.obj" />
+    <texture name="white_skybox" type="skybox" builtin="flat" rgb1="1 1 1" rgb2="1 1 1" width="32" height="32" />
+    <material name="ceiling_mat" rgba="0.720000 0.750000 0.780000 1.000000" />
+    <material name="table_mat" rgba="0.720000 0.740000 0.720000 1.000000" />
+    <material name="joint_mat" rgba="0.080000 0.100000 0.120000 1.000000" />
+    <material name="hande_body_mat" rgba="0.090000 0.100000 0.110000 1.000000" />
+    <material name="hande_finger_mat" rgba="0.180000 0.180000 0.170000 1.000000" />
+    <material name="hande_metal_mat" rgba="0.580000 0.600000 0.620000 1.000000" />
+    <material name="contact_mat" rgba="1.000000 0.660000 0.120000 1.000000" />
+    <material name="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" />
+    <mesh name="ti_tray_part_00" file="../assets/ti_tray/mujoco_parts/ti_tray_part_00.obj" inertia="shell" />
+    <mesh name="ti_tray_part_01" file="../assets/ti_tray/mujoco_parts/ti_tray_part_01.obj" inertia="shell" />
+    <mesh name="ti_tray_part_02" file="../assets/ti_tray/mujoco_parts/ti_tray_part_02.obj" inertia="shell" />
+    <mesh name="ti_tray_part_03" file="../assets/ti_tray/mujoco_parts/ti_tray_part_03.obj" inertia="shell" />
+    <mesh name="ti_tray_part_04" file="../assets/ti_tray/mujoco_parts/ti_tray_part_04.obj" inertia="shell" />
+    <mesh name="ti_tray_part_05" file="../assets/ti_tray/mujoco_parts/ti_tray_part_05.obj" inertia="shell" />
+    <mesh name="ti_tray_part_06" file="../assets/ti_tray/mujoco_parts/ti_tray_part_06.obj" inertia="shell" />
+    <mesh name="ti_tray_part_07" file="../assets/ti_tray/mujoco_parts/ti_tray_part_07.obj" inertia="shell" />
+    <mesh name="ti_tray_part_08" file="../assets/ti_tray/mujoco_parts/ti_tray_part_08.obj" inertia="shell" />
+    <mesh name="ti_tray_part_09" file="../assets/ti_tray/mujoco_parts/ti_tray_part_09.obj" inertia="shell" />
+    <mesh name="ti_tray_part_10" file="../assets/ti_tray/mujoco_parts/ti_tray_part_10.obj" inertia="shell" />
+    <mesh name="ti_tray_part_11" file="../assets/ti_tray/mujoco_parts/ti_tray_part_11.obj" inertia="shell" />
+    <mesh name="ti_tray_part_12" file="../assets/ti_tray/mujoco_parts/ti_tray_part_12.obj" inertia="shell" />
+    <mesh name="ti_tray_part_13" file="../assets/ti_tray/mujoco_parts/ti_tray_part_13.obj" inertia="shell" />
+    <mesh name="ti_tray_part_14" file="../assets/ti_tray/mujoco_parts/ti_tray_part_14.obj" inertia="shell" />
+    <mesh name="ti_tray_part_15" file="../assets/ti_tray/mujoco_parts/ti_tray_part_15.obj" inertia="shell" />
+    <mesh name="ti_tray_part_16" file="../assets/ti_tray/mujoco_parts/ti_tray_part_16.obj" inertia="shell" />
+    <mesh name="ti_tray_part_17" file="../assets/ti_tray/mujoco_parts/ti_tray_part_17.obj" inertia="shell" />
+    <mesh name="ti_tray_part_18" file="../assets/ti_tray/mujoco_parts/ti_tray_part_18.obj" inertia="shell" />
+    <mesh name="ti_tray_part_19" file="../assets/ti_tray/mujoco_parts/ti_tray_part_19.obj" inertia="shell" />
+    <mesh name="ti_tray_part_20" file="../assets/ti_tray/mujoco_parts/ti_tray_part_20.obj" inertia="shell" />
+    <mesh name="ti_tray_part_21" file="../assets/ti_tray/mujoco_parts/ti_tray_part_21.obj" inertia="shell" />
+    <mesh name="ti_tray_part_22" file="../assets/ti_tray/mujoco_parts/ti_tray_part_22.obj" inertia="shell" />
+    <mesh name="ti_tray_part_23" file="../assets/ti_tray/mujoco_parts/ti_tray_part_23.obj" inertia="shell" />
+    <mesh name="ti_tray_part_24" file="../assets/ti_tray/mujoco_parts/ti_tray_part_24.obj" inertia="shell" />
+    <mesh name="hande_io_coupler" file="../assets/robotiq_hande_description/meshes/io_coupler.obj" />
+    <mesh name="hande_body" file="../assets/robotiq_hande_description/meshes/hande.obj" />
+    <mesh name="hande_finger" file="../assets/robotiq_hande_description/meshes/finger.obj" />
+  </asset>
+  <worldbody>
+    <light name="spotlight" mode="targetbodycom" target="wrist_2_link" pos="0 -1 2" />
+    <body name="ur5e_root" pos="0.000000 0.000000 0.000000" quat="0.000000 0.707107 0.707107 -0.000000">
+      <body name="base" quat="1 0 0 1" childclass="ur5e">
+        <inertial mass="4.0" pos="0 0 0" diaginertia="0.00443333156 0.00443333156 0.0072" />
+        <geom mesh="base_0" material="black" class="visual" />
+        <geom mesh="base_1" material="jointgray" class="visual" />
+        <body name="shoulder_link" pos="0 0 0.163">
+          <inertial mass="3.7" pos="0 0 0" diaginertia="0.0102675 0.0102675 0.00666" />
+          <joint name="shoulder_pan_joint" class="size3" axis="0 0 1" />
+          <geom mesh="shoulder_0" material="urblue" class="visual" />
+          <geom mesh="shoulder_1" material="black" class="visual" />
+          <geom mesh="shoulder_2" material="jointgray" class="visual" />
+          <geom class="collision" size="0.06 0.06" pos="0 0 -0.04" />
+          <body name="upper_arm_link" pos="0 0.138 0" quat="1 0 1 0">
+            <inertial mass="8.393" pos="0 0 0.2125" diaginertia="0.133886 0.133886 0.0151074" />
+            <joint name="shoulder_lift_joint" class="size3" />
+            <geom mesh="upperarm_0" material="linkgray" class="visual" />
+            <geom mesh="upperarm_1" material="black" class="visual" />
+            <geom mesh="upperarm_2" material="jointgray" class="visual" />
+            <geom mesh="upperarm_3" material="urblue" class="visual" />
+            <geom class="collision" pos="0 -0.04 0" quat="1 1 0 0" size="0.06 0.06" />
+            <geom class="collision" size="0.05 0.2" pos="0 0 0.2" />
+            <body name="forearm_link" pos="0 -0.131 0.425">
+              <inertial mass="2.275" pos="0 0 0.196" diaginertia="0.0311796 0.0311796 0.004095" />
+              <joint name="elbow_joint" class="size3_limited" />
+              <geom mesh="forearm_0" material="urblue" class="visual" />
+              <geom mesh="forearm_1" material="linkgray" class="visual" />
+              <geom mesh="forearm_2" material="black" class="visual" />
+              <geom mesh="forearm_3" material="jointgray" class="visual" />
+              <geom class="collision" pos="0 0.08 0" quat="1 1 0 0" size="0.055 0.06" />
+              <geom class="collision" size="0.038 0.19" pos="0 0 0.2" />
+              <body name="wrist_1_link" pos="0 0 0.392" quat="1 0 1 0">
+                <inertial mass="1.219" pos="0 0.127 0" diaginertia="0.0025599 0.0025599 0.0021942" />
+                <joint name="wrist_1_joint" class="size1" />
+                <geom mesh="wrist1_0" material="black" class="visual" />
+                <geom mesh="wrist1_1" material="urblue" class="visual" />
+                <geom mesh="wrist1_2" material="jointgray" class="visual" />
+                <geom class="collision" pos="0 0.05 0" quat="1 1 0 0" size="0.04 0.07" />
+                <body name="wrist_2_link" pos="0 0.127 0">
+                  <inertial mass="1.219" pos="0 0 0.1" diaginertia="0.0025599 0.0025599 0.0021942" />
+                  <joint name="wrist_2_joint" axis="0 0 1" class="size1" />
+                  <geom mesh="wrist2_0" material="black" class="visual" />
+                  <geom mesh="wrist2_1" material="urblue" class="visual" />
+                  <geom mesh="wrist2_2" material="jointgray" class="visual" />
+                  <geom class="collision" size="0.04 0.06" pos="0 0 0.04" />
+                  <geom class="collision" pos="0 0.02 0.1" quat="1 1 0 0" size="0.04 0.04" />
+                  <body name="wrist_3_link" pos="0 0 0.1">
+                    <inertial mass="0.1889" pos="0 0.0771683 0" quat="1 0 0 1" diaginertia="0.000132134 9.90863e-05 9.90863e-05" />
+                    <joint name="wrist_3_joint" class="size1" />
+                    <geom material="linkgray" mesh="wrist3" class="visual" />
+                    <geom class="eef_collision" pos="0 0.08 0" quat="1 1 0 0" size="0.04 0.02" />
+                    <site name="attachment_site" pos="0 0.1 0" quat="-1 1 0 0" />
+                    <body name="hande_mount" pos="0 0.1 0" quat="-1 1 0 0">
+                      <geom name="hande_io_coupler" type="mesh" mesh="hande_io_coupler" pos="0.000000 0.000000 0.000000" quat="1.000000 0.000000 0.000000 0.000000" material="hande_metal_mat" contype="0" conaffinity="0" group="2" />
+                      <geom name="hande_body" type="mesh" mesh="hande_body" pos="0.000000 0.000000 0.011000" quat="1.000000 0.000000 0.000000 0.000000" material="hande_body_mat" contype="0" conaffinity="0" group="2" />
+                      <geom name="hande_left_finger" type="mesh" mesh="hande_finger" pos="0.020000 0.000000 0.110000" quat="1.000000 0.000000 0.000000 0.000000" material="hande_finger_mat" contype="0" conaffinity="0" group="2" />
+                      <geom name="hande_right_finger" type="mesh" mesh="hande_finger" pos="-0.020000 0.000000 0.110000" quat="0.000000 0.000000 0.000000 1.000000" material="hande_finger_mat" contype="0" conaffinity="0" group="2" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <light name="key" pos="0 -1 1.2" dir="0 1 -1" />
+    <camera name="overview" pos="1.2 -1.5 0.6" xyaxes="0.78 0.62 0 -0.24 0.30 0.92" />
+    <!--Plane centroid and normals are expressed in MuJoCo world coordinates. The table top uses the fitted centroid but is flattened to the robot-base plane.-->
+    <!--centroid=-0.271848 0.414837 -0.985442 fitted_normal=0.001137 -0.028085 0.999605 table_normal=0.000000 0.000000 1.000000 rms_error_m=0.000198791-->
+    <geom name="ceiling_panel" type="box" pos="0.000000 0.000000 0.025000" quat="1.000000 0.000000 0.000000 0.000000" size="0.750000 0.750000 0.025000" material="ceiling_mat" contype="0" conaffinity="0" />
+    <geom name="ceiling_mount" type="cylinder" pos="0 0 -0.035" size="0.085 0.035" material="joint_mat" contype="0" conaffinity="0" />
+    <geom name="estimated_table" type="box" pos="-0.271848 0.414837 -1.010442" quat="1.000000 0.000000 0.000000 0.000000" size="0.350000 0.368783 0.025000" material="table_mat" rgba="0.720000 0.740000 0.720000 1.000000" />
+    <geom name="ti_tray_00" type="mesh" mesh="ti_tray_part_00" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_01" type="mesh" mesh="ti_tray_part_01" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_02" type="mesh" mesh="ti_tray_part_02" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_03" type="mesh" mesh="ti_tray_part_03" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_04" type="mesh" mesh="ti_tray_part_04" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_05" type="mesh" mesh="ti_tray_part_05" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_06" type="mesh" mesh="ti_tray_part_06" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_07" type="mesh" mesh="ti_tray_part_07" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_08" type="mesh" mesh="ti_tray_part_08" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_09" type="mesh" mesh="ti_tray_part_09" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_10" type="mesh" mesh="ti_tray_part_10" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_11" type="mesh" mesh="ti_tray_part_11" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_12" type="mesh" mesh="ti_tray_part_12" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_13" type="mesh" mesh="ti_tray_part_13" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_14" type="mesh" mesh="ti_tray_part_14" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_15" type="mesh" mesh="ti_tray_part_15" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_16" type="mesh" mesh="ti_tray_part_16" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_17" type="mesh" mesh="ti_tray_part_17" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_18" type="mesh" mesh="ti_tray_part_18" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_19" type="mesh" mesh="ti_tray_part_19" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_20" type="mesh" mesh="ti_tray_part_20" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_21" type="mesh" mesh="ti_tray_part_21" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_22" type="mesh" mesh="ti_tray_part_22" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_23" type="mesh" mesh="ti_tray_part_23" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="ti_tray_24" type="mesh" mesh="ti_tray_part_24" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" contype="0" conaffinity="0" />
+    <geom name="contact_marker_1" type="sphere" pos="-0.154090 0.407550 -0.985960" size="0.018" material="contact_mat" contype="0" conaffinity="0" />
+    <geom name="contact_marker_2" type="sphere" pos="-0.384670 0.392030 -0.986170" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
+    <geom name="contact_marker_3" type="sphere" pos="-0.306300 0.256150 -0.989630" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
+    <geom name="contact_marker_4" type="sphere" pos="-0.242330 0.603620 -0.980010" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
+  </worldbody>
+  <actuator>
+    <general class="size3" name="shoulder_pan" joint="shoulder_pan_joint" />
+    <general class="size3" name="shoulder_lift" joint="shoulder_lift_joint" />
+    <general class="size3_limited" name="elbow" joint="elbow_joint" />
+    <general class="size1" name="wrist_1" joint="wrist_1_joint" />
+    <general class="size1" name="wrist_2" joint="wrist_2_joint" />
+    <general class="size1" name="wrist_3" joint="wrist_3_joint" />
+  </actuator>
+  <keyframe>
+    <key name="contact_1" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989" />
+    <key name="home" qpos="-1.5708 -1.5708 1.5708 -1.5708 -1.5708 0" ctrl="-1.5708 -1.5708 1.5708 -1.5708 -1.5708 0" />
+  </keyframe>
+</mujoco>
