@@ -107,10 +107,10 @@ Without uv:
 surface-estimator estimate --input data/example_contacts.yaml
 ```
 
-For your measured file from the parent directory:
+For your measured contact file:
 
 ```bash
-surface-estimator estimate --input ../ur5e_hande_3_surface_contacts.yaml
+surface-estimator estimate --input data/ur5e_hande_3_surface_contacts.yaml
 ```
 
 With uv:
@@ -127,10 +127,10 @@ Without uv:
 surface-estimator visualize --input data/example_contacts.yaml
 ```
 
-For your measured file from the parent directory:
+For your measured contact file:
 
 ```bash
-surface-estimator visualize --input ../ur5e_hande_3_surface_contacts.yaml
+surface-estimator visualize --input data/ur5e_hande_3_surface_contacts.yaml
 ```
 
 With uv:
