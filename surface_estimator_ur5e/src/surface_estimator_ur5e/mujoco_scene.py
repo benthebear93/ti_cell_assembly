@@ -53,20 +53,106 @@ _HANDE_MESH_FILES = {
     "hande_body": _HANDE_MESH_DIR / "hande.obj",
     "hande_finger": _HANDE_MESH_DIR / "finger.obj",
 }
+_REALSENSE_MJCF_PATH = _PROJECT_ROOT / "assets" / "realsense_d435i" / "d435i.xml"
+_REALSENSE_BODY_NAME = "realsense_wrist_mount"
+_REALSENSE_CAMERA_NAME = "realsense_rgb"
+_REALSENSE_CAMERA_SITE_NAME = "realsense_rgb_site"
+_REALSENSE_MOUNT_POS_M = (0.0, -0.055, 0.035)
+_REALSENSE_MOUNT_TOE_IN_DEG = -22.0
+_REALSENSE_RGB_CAMERA_POS_M = (0.032, 0.0, 0.004)
+_REALSENSE_RGB_CAMERA_XYAXES = "1 0 0 0 -1 0"
+_REALSENSE_MASS_KG = 0.072
+_REALSENSE_INERTIAL_POS_M = (0.0, 0.0, -0.0125)
+_REALSENSE_DIAGINERTIA = (0.0000075, 0.000050, 0.000050)
 _HANDE_COUPLER_HEIGHT_M = 0.011
 _HANDE_BODY_HEIGHT_M = 0.099
 _HANDE_FINGER_OPENING_M = 0.020
 _HANDE_GRASP_FINGER_OFFSET_M = 0.038
 _HANDE_GRASP_FINGER_RANGE_M = 0.030
 _HANDE_GRASP_CLOSE_M = 0.030
+_HANDE_HANDLE_PUSH_PAD_SIZE_M = (0.010, 0.014, 0.006)
 _TI_TRAY_MESH_PATH = _PROJECT_ROOT / "assets" / "ti_tray" / "ti_tray.obj"
 _TI_TRAY_PARTS_DIR = _PROJECT_ROOT / "assets" / "ti_tray" / "mujoco_parts"
+_TI_ASSEMBLY_MESH_PATH = (
+    _PROJECT_ROOT
+    / "assets"
+    / "ti_assembly_no_presser_cathode_tray"
+    / "ti_assembly_no_presser_cathode_tray_mujoco.obj"
+)
+_TI_ASSEMBLY_PARTS_DIR = (
+    _PROJECT_ROOT / "assets" / "ti_assembly_no_presser_cathode_tray" / "mujoco_parts"
+)
+_TI_ASSEMBLY_PIN_MESH_PATH = _TI_ASSEMBLY_PARTS_DIR / "ti_assembly_pins_mujoco.obj"
+_TI_ASSEMBLY_PLATE_MESH_PATH = _TI_ASSEMBLY_PARTS_DIR / "ti_assembly_plate_mujoco.obj"
+_TI_ASSEMBLY_GREY_MESH_PATH = _TI_ASSEMBLY_PARTS_DIR / "ti_assembly_grey_mujoco.obj"
+# The source OBJ contains many `o mesh*` objects; MuJoCo imports only the first
+# one as a mesh asset, so use the flattened MuJoCo copy.
+_TI_PRESSER_MESH_PATH = _PROJECT_ROOT / "assets" / "ti_presser" / "ti_presser_mujoco.obj"
+_TI_PRESSER_PARTS_DIR = _PROJECT_ROOT / "assets" / "ti_presser" / "mujoco_parts"
 _TABLE_ALUMINUM_RGBA = (0.72, 0.74, 0.72, 1.0)
-_TRAY_GREEN_RGBA = (0.0, 0.58, 0.22, 1.0)
+_TRAY_GREEN_RGBA = (0.96, 0.96, 0.93, 1.0)
+_TI_ASSEMBLY_GREY_RGBA = (0.46, 0.50, 0.46, 1.0)
+_TI_ASSEMBLY_PIN_RGBA = (0.96, 0.96, 0.93, 1.0)
+_TI_ASSEMBLY_PLATE_RGBA = (0.08, 0.30, 0.82, 1.0)
+_TI_PRESSER_RGBA = (0.84, 0.84, 0.80, 1.0)
+_TI_PRESSER_PART_SPECS = (
+    ("ti_presser_dark", "ti_presser_00_dark_mujoco.obj", (0.25, 0.25, 0.25, 1.0)),
+    ("ti_presser_mid", "ti_presser_01_mid_mujoco.obj", (0.50, 0.50, 0.50, 1.0)),
+    ("ti_presser_red", "ti_presser_02_red_mujoco.obj", (0.75, 0.00, 0.00, 1.0)),
+    ("ti_presser_light", "ti_presser_03_light_mujoco.obj", (0.75, 0.75, 0.75, 1.0)),
+    ("ti_presser_metal", "ti_presser_04_metal_mujoco.obj", (0.80, 0.82, 0.94, 1.0)),
+)
 _TI_TRAY_TABLE_CLEARANCE_M = 0.001
+_TI_ASSEMBLY_TABLE_CLEARANCE_M = 0.001
+_TI_ASSEMBLY_SPAWN_OFFSET_LOCAL_M = (-0.16, 0.12)
+_TI_ASSEMBLY_PRESSER_UPPER_PIVOT_LOCAL = (0.02764, 0.00284979, 0.151914)
+_TI_ASSEMBLY_PRESSER_LOWER_PIVOT_LOCAL = (0.02764, 0.01281650, 0.135902)
+_TI_PRESSER_UPPER_GROUND_PIVOT_LOCAL = (-0.02764, 0.00758444, 0.05659535)
+_TI_PRESSER_LOWER_GROUND_PIVOT_LOCAL = (-0.02736260, 0.00669889, 0.03780420)
+_TI_PRESSER_HANDLE_MESH_PIVOT_LOCAL = (-0.02764, 0.00670245, 0.06146916)
+_TI_PRESSER_HANDLE_PROXY_LINK_END_LOCAL = (0.0, 0.017, 0.032)
+_TI_PRESSER_HANDLE_PROXY_LINK_RADIUS_M = 0.0026
+_TI_PRESSER_HANDLE_PROXY_GRIP_HALF_LENGTH_M = 0.042
+_TI_PRESSER_HANDLE_PROXY_GRIP_RADIUS_M = 0.0065
+_TI_PRESSER_INITIAL_ANGLE_RAD = 0.0
+_TI_PRESSER_MASS_KG = 0.060
+_TI_PRESSER_HANDLE_MASS_KG = 0.020
+_TI_PRESSER_HANDLE_HINGE_RANGE_RAD = (-1.2, 1.35)
 _TI_TRAY_TOTAL_MASS_KG = 0.005
 _TI_TRAY_PROTRUSION_CENTER = (0.0, -0.05150, 0.02750)
 _TI_TRAY_PROTRUSION_SIZE = (0.01100, 0.01200, 0.01650)
+_TI_TRAY_HOLE_COLLISION_INNER_HALF_M = 0.00345
+_TI_TRAY_HOLE_COLLISION_OUTER_HALF_M = 0.00545
+_TI_TRAY_HOLE_COLLISION_HALF_THICKNESS_M = 0.0016
+_TI_TRAY_HOLE_CENTERS = (
+    (-0.02000, -0.03000, 0.01030),
+    (0.02000, -0.03000, 0.01030),
+    (-0.02000, 0.03000, 0.01030),
+    (0.02000, 0.03000, 0.01030),
+)
+_TI_ASSEMBLY_POST_CENTERS = (
+    (0.00750, 0.00721, 0.03316),
+    (0.04750, 0.00721, 0.03316),
+    (0.00750, 0.03256, 0.08754),
+    (0.04750, 0.03256, 0.08754),
+)
+_TI_ASSEMBLY_POST_AXIS_LOCAL = (0.0, -0.90635764, 0.42251133)
+_TI_ASSEMBLY_POST_COLLISION_RADIUS_M = 0.0030
+_TI_ASSEMBLY_POST_COLLISION_HALF_LENGTH_M = 0.0140
+_TI_ASSEMBLY_POST_STOP_RADIUS_M = 0.0060
+_TI_ASSEMBLY_POST_STOP_HALF_LENGTH_M = 0.0015
+_TI_ASSEMBLY_LOWER_POST_COLLISION_AXIS_OFFSET_M = 0.0040
+_TI_ASSEMBLY_POST_HOLE_COLLISION_FRICTION = "0.4 0.02 0.002"
+_TI_ASSEMBLY_POST_HOLE_COLLISION_CONDIM = "3"
+_TI_ASSEMBLY_POST_HOLE_COLLISION_SOLREF = "0.006 1"
+_TI_ASSEMBLY_POST_HOLE_COLLISION_SOLIMP = "0.90 0.98 0.001"
+_TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLREF = "0.012 1"
+_TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLIMP = "0.82 0.96 0.002"
+_TI_TRAY_STOP_SEAT_RADIUS_M = 0.0066
+_TI_TRAY_STOP_SEAT_HALF_THICKNESS_M = 0.0005
+_TI_TRAY_STOP_SEAT_RELEASE_OFFSET_M = 0.0066
+_TI_TRAY_STOP_SEAT_TARGET_PENETRATION_M = 0.00005
+_TI_TRAY_STOP_SEAT_FRICTION = "0.6 0.02 0.002"
 _UR5E_ACTUATOR_NAMES = (
     "shoulder_pan",
     "shoulder_lift",
@@ -324,8 +410,12 @@ def build_mujoco_scene_xml(
     _add_material(asset, "hande_metal_mat", (0.58, 0.60, 0.62, 1.0))
     _add_material(asset, "contact_mat", (1.0, 0.66, 0.12, 1.0))
     _add_material(asset, "tray_mat", _TRAY_GREEN_RGBA)
+    for material in _realsense_material_assets():
+        _add_material(asset, material.name, material.rgba)
     tray_meshes = _ti_tray_mesh_assets()
     for mesh in tray_meshes:
+        _add_mesh(asset, mesh, output_path.parent)
+    for mesh in _realsense_mesh_assets():
         _add_mesh(asset, mesh, output_path.parent)
     for mesh in _hande_mesh_assets():
         _add_mesh(asset, mesh, output_path.parent)
@@ -405,7 +495,10 @@ def build_mujoco_scene_xml(
     elif robot_geometry.capsule_points is not None:
         _add_fixed_robot_geoms(world, robot_geometry.capsule_points)
     _add_hande_geoms(world, robot_geometry.tool0_transform_world, tcp_transform_world)
-    _add_contact_markers(world, contact_points_world, selected_contact_index)
+    _add_realsense_geoms(
+        world,
+        _hande_mount_transform(robot_geometry.tool0_transform_world, tcp_transform_world),
+    )
 
     ET.indent(root, space="  ")
     xml = ET.tostring(root, encoding="unicode")
@@ -513,6 +606,7 @@ def build_mujoco_control_scene_xml(
         raise ValueError("UR5e MJCF asset does not contain a worldbody.")
     _wrap_ur5e_body_for_display(world, display_transform)
     _attach_hande_to_wrist(root, actuated=actuated_hande)
+    _attach_realsense_to_wrist(root)
     if actuated_hande or dynamic_tray:
         _stiffen_ur5e_position_actuators(root)
     if actuated_hande:
@@ -522,7 +616,14 @@ def build_mujoco_control_scene_xml(
         target_center_world=contact_points_world[selected_contact_index],
     )
     if actuated_hande or dynamic_tray:
-        _set_grasp_keyframes(root, qpos, selected_contact_index, tray_position, tray_quat)
+        _set_grasp_keyframes(
+            root,
+            qpos,
+            selected_contact_index,
+            tray_position,
+            tray_quat,
+            include_presser=dynamic_tray,
+        )
     else:
         _set_ur5e_contact_keyframe(root, qpos, selected_contact_index)
     _add_control_scene_world_geoms(
@@ -654,7 +755,20 @@ def _add_control_scene_assets(asset: ET.Element, output_dir: Path) -> None:
     _add_material(asset, "hande_metal_mat", (0.58, 0.60, 0.62, 1.0))
     _add_material(asset, "contact_mat", (1.0, 0.66, 0.12, 1.0))
     _add_material(asset, "tray_mat", _TRAY_GREEN_RGBA)
+    _add_material(asset, "ti_assembly_grey_mat", _TI_ASSEMBLY_GREY_RGBA)
+    _add_material(asset, "ti_assembly_pin_mat", _TI_ASSEMBLY_PIN_RGBA)
+    _add_material(asset, "ti_assembly_plate_mat", _TI_ASSEMBLY_PLATE_RGBA)
+    for material in _realsense_material_assets():
+        _add_material(asset, material.name, material.rgba)
+    for mesh in _ti_assembly_mesh_assets():
+        _add_mesh(asset, mesh, output_dir)
+    handle_part = _ti_presser_handle_visual_part()
+    if handle_part is not None:
+        _, material, rgba = handle_part
+        _add_material(asset, material, rgba)
     for mesh in _ti_tray_mesh_assets():
+        _add_mesh(asset, mesh, output_dir)
+    for mesh in _realsense_mesh_assets():
         _add_mesh(asset, mesh, output_dir)
     for mesh in _hande_mesh_assets():
         _add_mesh(asset, mesh, output_dir)
@@ -747,7 +861,13 @@ def _add_control_scene_world_geoms(
                 target_center_world=contact_points_world[selected_contact_index],
                 mesh_assets=tray_meshes,
             )
-    _add_contact_markers(world, contact_points_world, selected_contact_index)
+    _add_fixed_ti_assembly_geom(
+        world,
+        table_frame=table_frame,
+        table_half_extents=table_half_extents,
+        target_center_world=contact_points_world[selected_contact_index],
+        include_presser=dynamic_tray,
+    )
 
 
 def _wrap_ur5e_body_for_display(world: ET.Element, display_transform: np.ndarray) -> None:
@@ -875,6 +995,85 @@ def _attach_hande_to_wrist(root: ET.Element, actuated: bool = False) -> None:
     )
 
 
+def _attach_realsense_to_wrist(root: ET.Element) -> None:
+    if not _realsense_mesh_assets():
+        return
+    if _find_body(root, _REALSENSE_BODY_NAME) is not None:
+        return
+
+    parent = _find_body(root, "hande_mount")
+    if parent is None:
+        wrist = _find_body(root, "wrist_3_link")
+        if wrist is None:
+            raise ValueError("UR5e MJCF asset does not contain a 'wrist_3_link' body.")
+        parent = ET.SubElement(
+            wrist,
+            "body",
+            {
+                "name": "tool_camera_mount",
+                "pos": "0 0.1 0",
+                "quat": "-1 1 0 0",
+            },
+        )
+
+    mount_transform = _realsense_mount_transform()
+    body = ET.SubElement(
+        parent,
+        "body",
+        {
+            "name": _REALSENSE_BODY_NAME,
+            "pos": _fmt_vec(mount_transform[:3, 3]),
+            "quat": _fmt_vec(_quat_wxyz(mount_transform[:3, :3])),
+        },
+    )
+    _add_realsense_body_contents(body)
+
+
+def _add_realsense_body_contents(parent: ET.Element) -> None:
+    ET.SubElement(
+        parent,
+        "inertial",
+        {
+            "pos": _fmt_vec(_REALSENSE_INERTIAL_POS_M),
+            "mass": f"{_REALSENSE_MASS_KG:.6f}",
+            "diaginertia": _fmt_vec(_REALSENSE_DIAGINERTIA),
+        },
+    )
+    for index, (mesh_name, material_name) in enumerate(_realsense_visual_parts()):
+        attrs = {
+            "name": f"realsense_{mesh_name}_{index:02d}",
+            "type": "mesh",
+            "mesh": mesh_name,
+            "contype": "0",
+            "conaffinity": "0",
+            "mass": "0",
+            "group": "2",
+        }
+        if material_name is not None:
+            attrs["material"] = material_name
+        ET.SubElement(parent, "geom", attrs)
+    ET.SubElement(
+        parent,
+        "camera",
+        {
+            "name": _REALSENSE_CAMERA_NAME,
+            "pos": _fmt_vec(_REALSENSE_RGB_CAMERA_POS_M),
+            "xyaxes": _REALSENSE_RGB_CAMERA_XYAXES,
+            "fovy": "58",
+        },
+    )
+    ET.SubElement(
+        parent,
+        "site",
+        {
+            "name": _REALSENSE_CAMERA_SITE_NAME,
+            "pos": _fmt_vec(_REALSENSE_RGB_CAMERA_POS_M),
+            "size": "0.006",
+            "rgba": "0.1 0.8 1 0.55",
+        },
+    )
+
+
 def _add_actuated_hande_fingers(mount: ET.Element, finger_z: float) -> None:
     left = ET.SubElement(
         mount,
@@ -912,6 +1111,11 @@ def _add_actuated_hande_fingers(mount: ET.Element, finger_z: float) -> None:
         },
     )
     _add_hande_finger_pad(left, "hande_left_pad_collision", (0.003, 0.0, 0.044))
+    _add_hande_handle_push_pad(
+        left,
+        "hande_left_handle_push_collision",
+        (0.003, 0.0, 0.044),
+    )
 
     right = ET.SubElement(
         mount,
@@ -949,6 +1153,11 @@ def _add_actuated_hande_fingers(mount: ET.Element, finger_z: float) -> None:
         },
     )
     _add_hande_finger_pad(right, "hande_right_pad_collision", (-0.003, 0.0, 0.044))
+    _add_hande_handle_push_pad(
+        right,
+        "hande_right_handle_push_collision",
+        (-0.003, 0.0, 0.044),
+    )
 
 
 def _add_hande_finger_pad(
@@ -964,7 +1173,7 @@ def _add_hande_finger_pad(
             "type": "box",
             "pos": _fmt_vec(local_pos),
             "size": "0.0035 0.009 0.0035",
-            "material": "hande_finger_mat",
+            "rgba": "0 0 0 0",
             "mass": "0.015",
             "friction": "5.0 0.10 0.01",
             "condim": "4",
@@ -973,6 +1182,34 @@ def _add_hande_finger_pad(
             "conaffinity": "2",
             "solref": "0.004 1",
             "solimp": "0.95 0.99 0.001",
+            "group": "3",
+        },
+    )
+
+
+def _add_hande_handle_push_pad(
+    parent: ET.Element,
+    name: str,
+    local_pos: tuple[float, float, float],
+) -> None:
+    ET.SubElement(
+        parent,
+        "geom",
+        {
+            "name": name,
+            "type": "box",
+            "pos": _fmt_vec(local_pos),
+            "size": _fmt_vec(_HANDE_HANDLE_PUSH_PAD_SIZE_M),
+            "rgba": "0 0 0 0",
+            "mass": "0.006",
+            "friction": "4.0 0.10 0.01",
+            "condim": "4",
+            "priority": "3",
+            "contype": "0",
+            "conaffinity": "64",
+            "solref": "0.006 1",
+            "solimp": "0.90 0.98 0.001",
+            "group": "3",
         },
     )
 
@@ -1044,6 +1281,7 @@ def _set_grasp_keyframes(
     selected_contact_index: int,
     tray_position: np.ndarray,
     tray_quat: np.ndarray,
+    include_presser: bool = False,
 ) -> None:
     keyframe = root.find("keyframe")
     if keyframe is None:
@@ -1051,21 +1289,22 @@ def _set_grasp_keyframes(
     for key in list(keyframe):
         keyframe.remove(key)
 
-    open_qpos = np.concatenate(
-        (
-            np.asarray(qpos, dtype=float),
-            np.array([0.0, 0.0], dtype=float),
-            np.asarray(tray_position, dtype=float),
-            np.asarray(tray_quat, dtype=float),
-        )
-    )
-    open_ctrl = np.concatenate((np.asarray(qpos, dtype=float), np.array([0.0, 0.0])))
-    closed_ctrl = np.concatenate(
-        (
-            np.asarray(qpos, dtype=float),
-            np.array([_HANDE_GRASP_CLOSE_M, _HANDE_GRASP_CLOSE_M], dtype=float),
-        )
-    )
+    qpos_parts = [
+        np.asarray(qpos, dtype=float),
+        np.array([0.0, 0.0], dtype=float),
+        np.asarray(tray_position, dtype=float),
+        np.asarray(tray_quat, dtype=float),
+    ]
+    if include_presser and _ti_presser_handle_visual_part() is not None:
+        qpos_parts.append(np.array([_TI_PRESSER_INITIAL_ANGLE_RAD], dtype=float))
+    open_qpos = np.concatenate(qpos_parts)
+    open_ctrl_parts = [np.asarray(qpos, dtype=float), np.array([0.0, 0.0], dtype=float)]
+    closed_ctrl_parts = [
+        np.asarray(qpos, dtype=float),
+        np.array([_HANDE_GRASP_CLOSE_M, _HANDE_GRASP_CLOSE_M], dtype=float),
+    ]
+    open_ctrl = np.concatenate(open_ctrl_parts)
+    closed_ctrl = np.concatenate(closed_ctrl_parts)
     for name, qpos_values, ctrl_values in (
         (f"contact_{selected_contact_index + 1}", open_qpos, open_ctrl),
         ("grasp_open", open_qpos, open_ctrl),
@@ -1279,6 +1518,56 @@ def _hande_mesh_assets() -> list[_MeshAsset]:
     ]
 
 
+def _realsense_mesh_assets() -> list[_MeshAsset]:
+    if not _REALSENSE_MJCF_PATH.exists():
+        return []
+    root = ET.parse(_REALSENSE_MJCF_PATH).getroot()
+    compiler = root.find("compiler")
+    mesh_dir = compiler.get("meshdir", "") if compiler is not None else ""
+    assets: list[_MeshAsset] = []
+    for mesh in root.findall("./asset/mesh"):
+        file_name = mesh.get("file")
+        if not file_name:
+            continue
+        path = _REALSENSE_MJCF_PATH.parent / mesh_dir / file_name
+        if not path.exists():
+            continue
+        assets.append(_MeshAsset(name=mesh.get("name", Path(file_name).stem), path=path))
+    return assets
+
+
+def _realsense_material_assets() -> list[_MaterialAsset]:
+    if not _REALSENSE_MJCF_PATH.exists():
+        return []
+    root = ET.parse(_REALSENSE_MJCF_PATH).getroot()
+    materials: list[_MaterialAsset] = []
+    for material in root.findall("./asset/material"):
+        name = material.get("name")
+        rgba_raw = material.get("rgba")
+        if name is None or rgba_raw is None:
+            continue
+        rgba = tuple(float(value) for value in rgba_raw.split())
+        if len(rgba) == 3:
+            rgba = (*rgba, 1.0)
+        if len(rgba) != 4:
+            continue
+        materials.append(_MaterialAsset(name=name, rgba=rgba))
+    return materials
+
+
+def _realsense_visual_parts() -> list[tuple[str, str | None]]:
+    if not _REALSENSE_MJCF_PATH.exists():
+        return []
+    root = ET.parse(_REALSENSE_MJCF_PATH).getroot()
+    parts: list[tuple[str, str | None]] = []
+    for geom in root.findall("./worldbody/body/geom"):
+        mesh_name = geom.get("mesh")
+        if mesh_name is None or geom.get("class") == "collision":
+            continue
+        parts.append((mesh_name, geom.get("material")))
+    return parts
+
+
 def _ti_tray_mesh_assets() -> list[_MeshAsset]:
     part_paths = sorted(_TI_TRAY_PARTS_DIR.glob("ti_tray_part_*.obj"))
     if part_paths:
@@ -1289,6 +1578,110 @@ def _ti_tray_mesh_assets() -> list[_MeshAsset]:
     if not _TI_TRAY_MESH_PATH.exists():
         return []
     return [_MeshAsset(name="ti_tray", path=_TI_TRAY_MESH_PATH, inertia="shell")]
+
+
+def _ti_assembly_mesh_assets() -> list[_MeshAsset]:
+    return [mesh for mesh, _, _ in _ti_assembly_visual_parts()]
+
+
+def _ti_assembly_visual_parts() -> list[
+    tuple[_MeshAsset, str, tuple[float, float, float, float]]
+]:
+    split_parts = (
+        (
+            _MeshAsset(
+                name="ti_assembly_pins",
+                path=_TI_ASSEMBLY_PIN_MESH_PATH,
+                inertia="shell",
+            ),
+            "ti_assembly_pin_mat",
+            _TI_ASSEMBLY_PIN_RGBA,
+        ),
+        (
+            _MeshAsset(
+                name="ti_assembly_plate",
+                path=_TI_ASSEMBLY_PLATE_MESH_PATH,
+                inertia="shell",
+            ),
+            "ti_assembly_plate_mat",
+            _TI_ASSEMBLY_PLATE_RGBA,
+        ),
+        (
+            _MeshAsset(
+                name="ti_assembly_grey",
+                path=_TI_ASSEMBLY_GREY_MESH_PATH,
+                inertia="shell",
+            ),
+            "ti_assembly_grey_mat",
+            _TI_ASSEMBLY_GREY_RGBA,
+        ),
+    )
+    if all(mesh.path.exists() for mesh, _, _ in split_parts):
+        return list(split_parts)
+    if not _TI_ASSEMBLY_MESH_PATH.exists():
+        return []
+    return [
+        (
+            _MeshAsset(
+                name="ti_assembly_no_presser_cathode_tray",
+                path=_TI_ASSEMBLY_MESH_PATH,
+                inertia="shell",
+            ),
+            "ti_assembly_grey_mat",
+            _TI_ASSEMBLY_GREY_RGBA,
+        )
+    ]
+
+
+def _ti_presser_mesh_asset() -> _MeshAsset | None:
+    if not _TI_PRESSER_MESH_PATH.exists():
+        return None
+    return _MeshAsset(name="ti_presser", path=_TI_PRESSER_MESH_PATH, inertia="shell")
+
+
+def _ti_presser_visual_parts() -> list[
+    tuple[_MeshAsset, str, tuple[float, float, float, float]]
+]:
+    parts: list[tuple[_MeshAsset, str, tuple[float, float, float, float]]] = []
+    for name, filename, rgba in _TI_PRESSER_PART_SPECS:
+        path = _TI_PRESSER_PARTS_DIR / filename
+        if not path.exists():
+            continue
+        parts.append(
+            (
+                _MeshAsset(name=name, path=path, inertia="shell"),
+                f"{name}_mat",
+                rgba,
+            )
+        )
+    if parts:
+        return parts
+    if not _TI_PRESSER_MESH_PATH.exists():
+        return []
+    return [
+        (
+            _MeshAsset(name="ti_presser", path=_TI_PRESSER_MESH_PATH, inertia="shell"),
+            "ti_presser_mat",
+            _TI_PRESSER_RGBA,
+        )
+    ]
+
+
+def _ti_presser_fixed_visual_parts() -> list[
+    tuple[_MeshAsset, str, tuple[float, float, float, float]]
+]:
+    return [
+        part for part in _ti_presser_visual_parts() if part[0].name != "ti_presser_red"
+    ]
+
+
+def _ti_presser_handle_visual_part() -> (
+    tuple[_MeshAsset, str, tuple[float, float, float, float]] | None
+):
+    for part in _ti_presser_visual_parts():
+        if part[0].name == "ti_presser_red":
+            return part
+    return None
 
 
 def _robot_points_world(
@@ -1455,6 +1848,66 @@ def _add_hande_mesh_geoms(
     )
 
 
+def _add_realsense_geoms(world: ET.Element, hande_transform: np.ndarray) -> None:
+    if not _realsense_mesh_assets():
+        return
+    mount_transform = hande_transform @ _realsense_mount_transform()
+    rotation = mount_transform[:3, :3]
+    origin = mount_transform[:3, 3]
+    for index, (mesh_name, material_name) in enumerate(_realsense_visual_parts()):
+        attrs = {
+            "name": f"realsense_{mesh_name}_{index:02d}",
+            "type": "mesh",
+            "mesh": mesh_name,
+            "pos": _fmt_vec(origin),
+            "quat": _fmt_vec(_quat_wxyz(rotation)),
+            "contype": "0",
+            "conaffinity": "0",
+            "group": "2",
+        }
+        if material_name is not None:
+            attrs["material"] = material_name
+        ET.SubElement(world, "geom", attrs)
+
+    camera_pos = origin + rotation @ np.asarray(_REALSENSE_RGB_CAMERA_POS_M, dtype=float)
+    ET.SubElement(
+        world,
+        "camera",
+        {
+            "name": _REALSENSE_CAMERA_NAME,
+            "pos": _fmt_vec(camera_pos),
+            "xyaxes": _world_xyaxes_from_local(rotation, _REALSENSE_RGB_CAMERA_XYAXES),
+            "fovy": "58",
+        },
+    )
+    ET.SubElement(
+        world,
+        "site",
+        {
+            "name": _REALSENSE_CAMERA_SITE_NAME,
+            "pos": _fmt_vec(camera_pos),
+            "size": "0.006",
+            "rgba": "0.1 0.8 1 0.55",
+        },
+    )
+
+
+def _realsense_mount_transform() -> np.ndarray:
+    transform = np.eye(4)
+    transform[:3, 3] = np.asarray(_REALSENSE_MOUNT_POS_M, dtype=float)
+    transform[:3, :3] = Rotation.from_euler(
+        "x",
+        np.deg2rad(_REALSENSE_MOUNT_TOE_IN_DEG),
+    ).as_matrix()
+    return transform
+
+
+def _world_xyaxes_from_local(rotation: np.ndarray, xyaxes: str) -> str:
+    values = _parse_vec(xyaxes, 6).reshape(2, 3)
+    world_axes = values @ rotation.T
+    return _fmt_vec(world_axes.reshape(6))
+
+
 def _hande_mount_transform(tool0_transform: np.ndarray, tcp_transform: np.ndarray) -> np.ndarray:
     transform = np.array(tool0_transform, dtype=float, copy=True)
     direction = tcp_transform[:3, 3] - tool0_transform[:3, 3]
@@ -1570,6 +2023,311 @@ def _add_ti_tray_geom(
         )
 
 
+def _add_fixed_ti_assembly_geom(
+    world: ET.Element,
+    table_frame: np.ndarray,
+    table_half_extents: np.ndarray,
+    target_center_world: np.ndarray,
+    include_presser: bool = False,
+) -> None:
+    visual_parts = _ti_assembly_visual_parts()
+    if not visual_parts:
+        return
+    position, quat = _ti_assembly_pose(
+        table_frame=table_frame,
+        table_half_extents=table_half_extents,
+        target_center_world=target_center_world,
+    )
+    for mesh, material, rgba in visual_parts:
+        ET.SubElement(
+            world,
+            "geom",
+            {
+                "name": mesh.name,
+                "type": "mesh",
+                "mesh": mesh.name,
+                "pos": _fmt_vec(position),
+                "quat": _fmt_vec(quat),
+                "material": material,
+                "rgba": _fmt_vec(rgba),
+                "contype": "0",
+                "conaffinity": "0",
+                "group": "2",
+            },
+        )
+    rotation = table_frame[:3, :3]
+    post_axis_world = _unit(rotation @ np.asarray(_TI_ASSEMBLY_POST_AXIS_LOCAL, dtype=float))
+    for index, center in enumerate(_TI_ASSEMBLY_POST_CENTERS):
+        center_world = position + rotation @ np.asarray(center, dtype=float)
+        ET.SubElement(
+            world,
+            "site",
+            {
+                "name": f"ti_assembly_post_{index + 1}_site",
+                "pos": _fmt_vec(center_world),
+                "size": "0.0015",
+                "rgba": "1 1 1 0.35",
+            },
+        )
+        collision_center_world = center_world
+        if index < 2:
+            collision_center_world = (
+                collision_center_world
+                + post_axis_world * _TI_ASSEMBLY_LOWER_POST_COLLISION_AXIS_OFFSET_M
+            )
+        _add_ti_assembly_post_collision(
+            world,
+            index,
+            collision_center_world,
+            post_axis_world,
+        )
+    if include_presser:
+        _add_ti_presser_body(world, position, rotation)
+
+
+def _add_ti_presser_body(
+    world: ET.Element,
+    assembly_position: np.ndarray,
+    assembly_rotation: np.ndarray,
+) -> None:
+    handle_part = _ti_presser_handle_visual_part()
+    if handle_part is None:
+        return
+    body_position, body_rotation = _ti_presser_mounted_pose(
+        assembly_position,
+        assembly_rotation,
+    )
+    body = ET.SubElement(
+        world,
+        "body",
+        {
+            "name": "ti_presser_body",
+            "pos": _fmt_vec(body_position),
+            "quat": _fmt_vec(_quat_wxyz(body_rotation)),
+        },
+    )
+    _add_ti_presser_handle_body(body, handle_part)
+
+
+def _add_ti_presser_handle_body(
+    parent: ET.Element,
+    visual_part: tuple[_MeshAsset, str, tuple[float, float, float, float]],
+) -> None:
+    joint_local = np.asarray(_TI_PRESSER_UPPER_GROUND_PIVOT_LOCAL, dtype=float)
+    mesh_pivot_local = np.asarray(_TI_PRESSER_HANDLE_MESH_PIVOT_LOCAL, dtype=float)
+    mesh, material, rgba = visual_part
+    body = ET.SubElement(
+        parent,
+        "body",
+        {
+            "name": "ti_presser_handle_body",
+            "pos": _fmt_vec(joint_local),
+        },
+    )
+    ET.SubElement(
+        body,
+        "joint",
+        {
+            "name": "ti_presser_handle_hinge_joint",
+            "type": "hinge",
+            "axis": "1 0 0",
+            "range": _fmt_vec(_TI_PRESSER_HANDLE_HINGE_RANGE_RAD),
+            "limited": "true",
+            "damping": "0.04",
+            "armature": "0.00008",
+            "frictionloss": "0.02",
+        },
+    )
+    inertial_pos, inertial_diag = _ti_presser_handle_inertial(mesh_pivot_local, mesh.path)
+    ET.SubElement(
+        body,
+        "inertial",
+        {
+            "pos": _fmt_vec(inertial_pos),
+            "mass": f"{_TI_PRESSER_HANDLE_MASS_KG:.9f}",
+            "diaginertia": _fmt_vec(inertial_diag),
+        },
+    )
+    ET.SubElement(
+        body,
+        "site",
+        {"name": "ti_presser_handle_pivot_site", "pos": "0 0 0", "size": "0.0015"},
+    )
+    ET.SubElement(
+        body,
+        "site",
+        {
+            "name": "ti_presser_handle_grip_site",
+            "pos": _fmt_vec(_TI_PRESSER_HANDLE_PROXY_LINK_END_LOCAL),
+            "size": "0.002",
+            "rgba": "1 0.2 0.05 0.45",
+        },
+    )
+    _add_ti_presser_handle_proxy_geoms(body, material, rgba)
+
+
+def _add_ti_presser_handle_proxy_geoms(
+    body: ET.Element,
+    material: str,
+    rgba: tuple[float, float, float, float],
+) -> None:
+    link_end = np.asarray(_TI_PRESSER_HANDLE_PROXY_LINK_END_LOCAL, dtype=float)
+    ET.SubElement(
+        body,
+        "geom",
+        {
+            "name": "ti_presser_handle_link_visual",
+            "type": "capsule",
+            "fromto": _fmt_vec([0.0, 0.0, 0.0, *link_end]),
+            "size": f"{_TI_PRESSER_HANDLE_PROXY_LINK_RADIUS_M:.6f}",
+            "material": material,
+            "rgba": _fmt_vec(rgba),
+            "contype": "64",
+            "conaffinity": "0",
+            "density": "0",
+            "friction": "1.0 0.02 0.002",
+            "condim": "4",
+            "priority": "4",
+            "solref": "0.006 1",
+            "solimp": "0.92 0.98 0.001",
+            "group": "2",
+        },
+    )
+    grip_half = _TI_PRESSER_HANDLE_PROXY_GRIP_HALF_LENGTH_M
+    grip_start = np.array([-grip_half, link_end[1], link_end[2]], dtype=float)
+    grip_end = np.array([grip_half, link_end[1], link_end[2]], dtype=float)
+    ET.SubElement(
+        body,
+        "geom",
+        {
+            "name": "ti_presser_handle_grip_visual",
+            "type": "capsule",
+            "fromto": _fmt_vec([*grip_start, *grip_end]),
+            "size": f"{_TI_PRESSER_HANDLE_PROXY_GRIP_RADIUS_M:.6f}",
+            "material": material,
+            "rgba": _fmt_vec(rgba),
+            "contype": "64",
+            "conaffinity": "0",
+            "density": "0",
+            "friction": "1.0 0.02 0.002",
+            "condim": "4",
+            "priority": "4",
+            "solref": "0.006 1",
+            "solimp": "0.92 0.98 0.001",
+            "group": "2",
+        },
+    )
+
+
+def _ti_presser_mounted_pose(
+    assembly_position: np.ndarray,
+    assembly_rotation: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    assembly_upper = np.asarray(_TI_ASSEMBLY_PRESSER_UPPER_PIVOT_LOCAL, dtype=float)
+    assembly_lower = np.asarray(_TI_ASSEMBLY_PRESSER_LOWER_PIVOT_LOCAL, dtype=float)
+    presser_upper = np.asarray(_TI_PRESSER_UPPER_GROUND_PIVOT_LOCAL, dtype=float)
+    presser_lower = np.asarray(_TI_PRESSER_LOWER_GROUND_PIVOT_LOCAL, dtype=float)
+    assembly_vec = assembly_upper - assembly_lower
+    presser_vec = presser_upper - presser_lower
+    assembly_angle = np.arctan2(assembly_vec[1], assembly_vec[2])
+    presser_angle = np.arctan2(presser_vec[1], presser_vec[2])
+    presser_to_assembly = Rotation.from_rotvec(
+        (presser_angle - assembly_angle) * np.array([1.0, 0.0, 0.0], dtype=float)
+    ).as_matrix()
+    body_rotation = assembly_rotation @ presser_to_assembly
+    body_position = (
+        assembly_position
+        + assembly_rotation @ assembly_upper
+        - body_rotation @ presser_upper
+    )
+    return body_position, body_rotation
+
+
+def _ti_presser_handle_inertial(
+    pivot_local: np.ndarray,
+    mesh_path: Path,
+) -> tuple[np.ndarray, np.ndarray]:
+    bounds = _obj_vertex_bounds(mesh_path)
+    center = 0.5 * (bounds[0] + bounds[1])
+    extents = bounds[1] - bounds[0]
+    mass = _TI_PRESSER_HANDLE_MASS_KG
+    inertia = (mass / 12.0) * np.array(
+        [
+            extents[1] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[1] ** 2,
+        ],
+        dtype=float,
+    )
+    return center - pivot_local, np.maximum(inertia, 1e-8)
+
+
+def _ti_presser_inertial(pivot_local: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    bounds = _obj_vertex_bounds(_TI_PRESSER_MESH_PATH)
+    center = 0.5 * (bounds[0] + bounds[1])
+    extents = bounds[1] - bounds[0]
+    mass = _TI_PRESSER_MASS_KG
+    inertia = (mass / 12.0) * np.array(
+        [
+            extents[1] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[1] ** 2,
+        ],
+        dtype=float,
+    )
+    return center - pivot_local, np.maximum(inertia, 1e-8)
+
+
+def _add_ti_assembly_post_collision(
+    world: ET.Element,
+    index: int,
+    center_world: np.ndarray,
+    axis_world: np.ndarray,
+) -> None:
+    post_start = center_world - axis_world * _TI_ASSEMBLY_POST_COLLISION_HALF_LENGTH_M
+    post_end = center_world + axis_world * _TI_ASSEMBLY_POST_COLLISION_HALF_LENGTH_M
+    ET.SubElement(
+        world,
+        "geom",
+        {
+            "name": f"ti_assembly_post_{index + 1}_collision",
+            "type": "cylinder",
+            "fromto": _fmt_vec([*post_start, *post_end]),
+            "size": f"{_TI_ASSEMBLY_POST_COLLISION_RADIUS_M:.6f}",
+            "rgba": "1 1 1 0.08",
+            "friction": _TI_ASSEMBLY_POST_HOLE_COLLISION_FRICTION,
+            "condim": _TI_ASSEMBLY_POST_HOLE_COLLISION_CONDIM,
+            "priority": "3",
+            "contype": "4",
+            "conaffinity": "8",
+            "solref": _TI_ASSEMBLY_POST_HOLE_COLLISION_SOLREF,
+            "solimp": _TI_ASSEMBLY_POST_HOLE_COLLISION_SOLIMP,
+            "group": "3",
+        },
+    )
+    stop_start = center_world - axis_world * _TI_ASSEMBLY_POST_STOP_HALF_LENGTH_M
+    stop_end = center_world + axis_world * _TI_ASSEMBLY_POST_STOP_HALF_LENGTH_M
+    ET.SubElement(
+        world,
+        "geom",
+        {
+            "name": f"ti_assembly_post_{index + 1}_stop_collision",
+            "type": "cylinder",
+            "fromto": _fmt_vec([*stop_start, *stop_end]),
+            "size": f"{_TI_ASSEMBLY_POST_STOP_RADIUS_M:.6f}",
+            "rgba": "1 1 1 0.08",
+            "friction": _TI_ASSEMBLY_POST_HOLE_COLLISION_FRICTION,
+            "condim": _TI_ASSEMBLY_POST_HOLE_COLLISION_CONDIM,
+            "priority": "3",
+            "contype": "16",
+            "conaffinity": "32",
+            "solref": _TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLREF,
+            "solimp": _TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLIMP,
+            "group": "3",
+        },
+    )
+
+
 def _add_dynamic_ti_tray_body(
     world: ET.Element,
     table_frame: np.ndarray,
@@ -1588,22 +2346,39 @@ def _add_dynamic_ti_tray_body(
             "quat": _fmt_vec(quat),
         },
     )
+    inertial_pos, inertial_diag = _ti_tray_inertial()
+    ET.SubElement(
+        body,
+        "inertial",
+        {
+            "pos": _fmt_vec(inertial_pos),
+            "mass": f"{_TI_TRAY_TOTAL_MASS_KG:.9f}",
+            "diaginertia": _fmt_vec(inertial_diag),
+        },
+    )
     ET.SubElement(body, "freejoint", {"name": "ti_tray_freejoint"})
     ET.SubElement(
         body,
         "site",
-        {
-            "name": "ti_tray_protrusion_site",
-            "pos": _fmt_vec(_TI_TRAY_PROTRUSION_CENTER),
-            "size": "0.006",
-            "rgba": "1 0.3 0.05 0.8",
+            {
+                "name": "ti_tray_protrusion_site",
+                "pos": _fmt_vec(_TI_TRAY_PROTRUSION_CENTER),
+                "size": "0.006",
+                "rgba": "1 1 1 0.25",
         },
     )
+    for index, center in enumerate(_TI_TRAY_HOLE_CENTERS):
+        ET.SubElement(
+            body,
+            "site",
+            {
+                "name": f"ti_tray_hole_{index + 1}_site",
+                "pos": _fmt_vec(center),
+                "size": "0.0015",
+                "rgba": "1 1 1 0.25",
+            },
+        )
     mesh_collision = collision_mode in {"mesh", "both"}
-    collision_meshes = [
-        mesh for mesh in mesh_assets if _mesh_can_form_collision_hull(mesh.path)
-    ]
-    mesh_mass = _TI_TRAY_TOTAL_MASS_KG / max(len(collision_meshes), 1)
     for index, mesh in enumerate(mesh_assets):
         use_collision = mesh_collision and _mesh_can_form_collision_hull(mesh.path)
         attrs = {
@@ -1617,7 +2392,7 @@ def _add_dynamic_ti_tray_body(
         if use_collision:
             attrs.update(
                 {
-                    "mass": f"{mesh_mass:.9f}",
+                    "density": "0",
                     "friction": "5.0 0.10 0.01",
                     "condim": "4",
                     "priority": "2",
@@ -1631,16 +2406,16 @@ def _add_dynamic_ti_tray_body(
             attrs.update({"contype": "0", "conaffinity": "0", "density": "0"})
         ET.SubElement(body, "geom", attrs)
     if collision_mode in {"proxy", "both"}:
-        _add_ti_tray_proxy_collision(body, massless=collision_mode == "both")
+        _add_ti_tray_proxy_collision(body)
 
 
-def _add_ti_tray_proxy_collision(body: ET.Element, massless: bool = False) -> None:
+def _add_ti_tray_proxy_collision(body: ET.Element) -> None:
     protrusion_attrs = {
         "name": "ti_tray_protrusion_grasp_collision",
         "type": "box",
         "pos": _fmt_vec(_TI_TRAY_PROTRUSION_CENTER),
-        "size": _fmt_vec(_TI_TRAY_PROTRUSION_SIZE),
-        "rgba": "0 0.58 0.22 0.35",
+            "size": _fmt_vec(_TI_TRAY_PROTRUSION_SIZE),
+            "rgba": "1 1 1 0.12",
         "friction": "5.0 0.10 0.01",
         "condim": "4",
         "priority": "2",
@@ -1649,11 +2424,90 @@ def _add_ti_tray_proxy_collision(body: ET.Element, massless: bool = False) -> No
         "solref": "0.004 1",
         "solimp": "0.95 0.99 0.001",
     }
-    if massless:
-        protrusion_attrs["density"] = "0"
-    else:
-        protrusion_attrs["mass"] = f"{_TI_TRAY_TOTAL_MASS_KG:.9f}"
+    protrusion_attrs["density"] = "0"
     ET.SubElement(body, "geom", protrusion_attrs)
+
+    for index, center in enumerate(_TI_TRAY_HOLE_CENTERS):
+        _add_ti_tray_hole_collision(body, index, np.asarray(center, dtype=float))
+        _add_ti_tray_stop_seat_collision(body, index, np.asarray(center, dtype=float))
+
+
+def _add_ti_tray_hole_collision(
+    body: ET.Element,
+    index: int,
+    center: np.ndarray,
+) -> None:
+    inner = _TI_TRAY_HOLE_COLLISION_INNER_HALF_M
+    outer = _TI_TRAY_HOLE_COLLISION_OUTER_HALF_M
+    wall = 0.5 * (outer - inner)
+    z_half = _TI_TRAY_HOLE_COLLISION_HALF_THICKNESS_M
+    segments = (
+        ("left", (-inner - wall, 0.0, 0.0), (wall, outer, z_half)),
+        ("right", (inner + wall, 0.0, 0.0), (wall, outer, z_half)),
+        ("bottom", (0.0, -inner - wall, 0.0), (inner, wall, z_half)),
+        ("top", (0.0, inner + wall, 0.0), (inner, wall, z_half)),
+    )
+    for segment_name, offset, size in segments:
+        ET.SubElement(
+            body,
+            "geom",
+            {
+                "name": f"ti_tray_hole_{index + 1}_{segment_name}_collision",
+                "type": "box",
+                "pos": _fmt_vec(center + np.asarray(offset, dtype=float)),
+                "size": _fmt_vec(size),
+                "rgba": "1 1 1 0.06",
+                "friction": _TI_ASSEMBLY_POST_HOLE_COLLISION_FRICTION,
+                "condim": _TI_ASSEMBLY_POST_HOLE_COLLISION_CONDIM,
+                "priority": "3",
+                "contype": "8",
+                "conaffinity": "4",
+                "solref": _TI_ASSEMBLY_POST_HOLE_COLLISION_SOLREF,
+                "solimp": _TI_ASSEMBLY_POST_HOLE_COLLISION_SOLIMP,
+                "density": "0",
+                "group": "3",
+            },
+        )
+
+
+def _add_ti_tray_stop_seat_collision(
+    body: ET.Element,
+    index: int,
+    center: np.ndarray,
+) -> None:
+    stop_center_offset_m = (
+        _TI_ASSEMBLY_LOWER_POST_COLLISION_AXIS_OFFSET_M if index < 2 else 0.0
+    )
+    seat_z = (
+        center[2]
+        + stop_center_offset_m
+        - _TI_TRAY_STOP_SEAT_RELEASE_OFFSET_M
+        + _TI_ASSEMBLY_POST_STOP_HALF_LENGTH_M
+        - _TI_TRAY_STOP_SEAT_TARGET_PENETRATION_M
+        + _TI_TRAY_STOP_SEAT_HALF_THICKNESS_M
+    )
+    ET.SubElement(
+        body,
+        "geom",
+        {
+            "name": f"ti_tray_hole_{index + 1}_stop_seat_collision",
+            "type": "cylinder",
+            "pos": _fmt_vec([center[0], center[1], seat_z]),
+            "size": _fmt_vec(
+                [_TI_TRAY_STOP_SEAT_RADIUS_M, _TI_TRAY_STOP_SEAT_HALF_THICKNESS_M]
+            ),
+            "rgba": "1 1 1 0.05",
+            "friction": _TI_TRAY_STOP_SEAT_FRICTION,
+            "condim": _TI_ASSEMBLY_POST_HOLE_COLLISION_CONDIM,
+            "priority": "4",
+            "contype": "32",
+            "conaffinity": "16",
+            "solref": _TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLREF,
+            "solimp": _TI_ASSEMBLY_STOP_SEAT_COLLISION_SOLIMP,
+            "density": "0",
+            "group": "3",
+        },
+    )
 
 
 def _validate_tray_collision_mode(mode: str) -> None:
@@ -1665,6 +2519,22 @@ def _mesh_can_form_collision_hull(path: Path, min_extent_m: float = 1e-5) -> boo
     bounds = _obj_vertex_bounds(path)
     extents = bounds[1] - bounds[0]
     return int(np.count_nonzero(extents > min_extent_m)) == 3
+
+
+def _ti_tray_inertial() -> tuple[np.ndarray, np.ndarray]:
+    vertices = _obj_vertices(_TI_TRAY_MESH_PATH)
+    center = np.mean(vertices, axis=0)
+    extents = np.max(vertices, axis=0) - np.min(vertices, axis=0)
+    mass = _TI_TRAY_TOTAL_MASS_KG
+    inertia = (mass / 12.0) * np.array(
+        [
+            extents[1] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[2] ** 2,
+            extents[0] ** 2 + extents[1] ** 2,
+        ],
+        dtype=float,
+    )
+    return center, np.maximum(inertia, 1e-8)
 
 
 def _ti_tray_body_pose(
@@ -1681,6 +2551,34 @@ def _ti_tray_body_pose(
     rotation = table_frame[:3, :3]
     target_local = rotation.T @ (target_center_world - table_frame[:3, 3])
     target_local[2] = 0.0
+    position = table_frame[:3, 3] + rotation @ (target_local - local_anchor)
+    return position, _quat_wxyz(rotation)
+
+
+def _ti_assembly_pose(
+    table_frame: np.ndarray,
+    table_half_extents: np.ndarray,
+    target_center_world: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    bounds = _obj_vertex_bounds(_TI_ASSEMBLY_MESH_PATH)
+    raw_center_xy = 0.5 * (bounds[0, :2] + bounds[1, :2])
+    raw_bottom_z = bounds[0, 2]
+    local_anchor = np.array(
+        [
+            raw_center_xy[0],
+            raw_center_xy[1],
+            raw_bottom_z - _TI_ASSEMBLY_TABLE_CLEARANCE_M,
+        ],
+        dtype=float,
+    )
+    rotation = table_frame[:3, :3]
+    selected_local = rotation.T @ (target_center_world - table_frame[:3, 3])
+    target_xy = selected_local[:2] + np.asarray(_TI_ASSEMBLY_SPAWN_OFFSET_LOCAL_M)
+    mesh_half_xy = 0.5 * (bounds[1, :2] - bounds[0, :2])
+    table_margin_m = 0.02
+    limit_xy = np.maximum(table_half_extents[:2] - mesh_half_xy - table_margin_m, 0.0)
+    target_xy = np.clip(target_xy, -limit_xy, limit_xy)
+    target_local = np.array([target_xy[0], target_xy[1], 0.0], dtype=float)
     position = table_frame[:3, 3] + rotation @ (target_local - local_anchor)
     return position, _quat_wxyz(rotation)
 
@@ -1779,6 +2677,11 @@ def _parse_vec(raw: str, expected_size: int) -> np.ndarray:
 
 
 def _obj_vertex_bounds(path: Path) -> np.ndarray:
+    array = _obj_vertices(path)
+    return np.vstack((array.min(axis=0), array.max(axis=0)))
+
+
+def _obj_vertices(path: Path) -> np.ndarray:
     vertices: list[tuple[float, float, float]] = []
     with path.open("r", encoding="utf-8") as file:
         for line in file:
@@ -1790,8 +2693,7 @@ def _obj_vertex_bounds(path: Path) -> np.ndarray:
             vertices.append((float(parts[1]), float(parts[2]), float(parts[3])))
     if not vertices:
         raise ValueError(f"OBJ mesh has no vertices: {path}")
-    array = np.asarray(vertices, dtype=float)
-    return np.vstack((array.min(axis=0), array.max(axis=0)))
+    return np.asarray(vertices, dtype=float)
 
 
 def _unit(vector: np.ndarray) -> np.ndarray:

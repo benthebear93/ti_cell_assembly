@@ -65,7 +65,21 @@
     <material name="hande_finger_mat" rgba="0.180000 0.180000 0.170000 1.000000" />
     <material name="hande_metal_mat" rgba="0.580000 0.600000 0.620000 1.000000" />
     <material name="contact_mat" rgba="1.000000 0.660000 0.120000 1.000000" />
-    <material name="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" />
+    <material name="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" />
+    <material name="ti_assembly_grey_mat" rgba="0.460000 0.500000 0.460000 1.000000" />
+    <material name="ti_assembly_pin_mat" rgba="0.960000 0.960000 0.930000 1.000000" />
+    <material name="ti_assembly_plate_mat" rgba="0.080000 0.300000 0.820000 1.000000" />
+    <material name="Black_Acrylic" rgba="0.070360 0.070360 0.070360 1.000000" />
+    <material name="Cameras_Gray" rgba="0.296138 0.296138 0.296138 1.000000" />
+    <material name="IR_Emitter_Lens" rgba="0.287440 0.665387 0.327778 1.000000" />
+    <material name="IR_Lens" rgba="0.035601 0.035601 0.035601 1.000000" />
+    <material name="IR_Rim" rgba="0.799102 0.806952 0.799103 1.000000" />
+    <material name="Metal_Casing" rgba="1.000000 1.000000 1.000000 1.000000" />
+    <material name="RGB_Pupil" rgba="0.087140 0.002866 0.009346 1.000000" />
+    <mesh name="ti_assembly_pins" file="../assets/ti_assembly_no_presser_cathode_tray/mujoco_parts/ti_assembly_pins_mujoco.obj" inertia="shell" />
+    <mesh name="ti_assembly_plate" file="../assets/ti_assembly_no_presser_cathode_tray/mujoco_parts/ti_assembly_plate_mujoco.obj" inertia="shell" />
+    <mesh name="ti_assembly_grey" file="../assets/ti_assembly_no_presser_cathode_tray/mujoco_parts/ti_assembly_grey_mujoco.obj" inertia="shell" />
+    <material name="ti_presser_red_mat" rgba="0.750000 0.000000 0.000000 1.000000" />
     <mesh name="ti_tray_part_00" file="../assets/ti_tray/mujoco_parts/ti_tray_part_00.obj" inertia="shell" />
     <mesh name="ti_tray_part_01" file="../assets/ti_tray/mujoco_parts/ti_tray_part_01.obj" inertia="shell" />
     <mesh name="ti_tray_part_02" file="../assets/ti_tray/mujoco_parts/ti_tray_part_02.obj" inertia="shell" />
@@ -91,6 +105,15 @@
     <mesh name="ti_tray_part_22" file="../assets/ti_tray/mujoco_parts/ti_tray_part_22.obj" inertia="shell" />
     <mesh name="ti_tray_part_23" file="../assets/ti_tray/mujoco_parts/ti_tray_part_23.obj" inertia="shell" />
     <mesh name="ti_tray_part_24" file="../assets/ti_tray/mujoco_parts/ti_tray_part_24.obj" inertia="shell" />
+    <mesh name="d435i_0" file="../assets/realsense_d435i/assets/d435i_0.obj" />
+    <mesh name="d435i_1" file="../assets/realsense_d435i/assets/d435i_1.obj" />
+    <mesh name="d435i_2" file="../assets/realsense_d435i/assets/d435i_2.obj" />
+    <mesh name="d435i_3" file="../assets/realsense_d435i/assets/d435i_3.obj" />
+    <mesh name="d435i_4" file="../assets/realsense_d435i/assets/d435i_4.obj" />
+    <mesh name="d435i_5" file="../assets/realsense_d435i/assets/d435i_5.obj" />
+    <mesh name="d435i_6" file="../assets/realsense_d435i/assets/d435i_6.obj" />
+    <mesh name="d435i_7" file="../assets/realsense_d435i/assets/d435i_7.obj" />
+    <mesh name="d435i_8" file="../assets/realsense_d435i/assets/d435i_8.obj" />
     <mesh name="hande_io_coupler" file="../assets/robotiq_hande_description/meshes/io_coupler.obj" />
     <mesh name="hande_body" file="../assets/robotiq_hande_description/meshes/hande.obj" />
     <mesh name="hande_finger" file="../assets/robotiq_hande_description/meshes/finger.obj" />
@@ -155,12 +178,28 @@
                       <body name="hande_left_finger_body" pos="0.038000 0.000000 0.110000">
                         <joint name="hande_left_finger_joint" type="slide" axis="-1 0 0" range="0.000000 0.030000" damping="8" armature="0.002" />
                         <geom name="hande_left_finger_visual" type="mesh" mesh="hande_finger" pos="0 0 0" quat="1 0 0 0" material="hande_finger_mat" contype="0" conaffinity="0" group="2" />
-                        <geom name="hande_left_pad_collision" type="box" pos="0.003000 0.000000 0.044000" size="0.0035 0.009 0.0035" material="hande_finger_mat" mass="0.015" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" />
+                        <geom name="hande_left_pad_collision" type="box" pos="0.003000 0.000000 0.044000" size="0.0035 0.009 0.0035" rgba="0 0 0 0" mass="0.015" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" group="3" />
+                        <geom name="hande_left_handle_push_collision" type="box" pos="0.003000 0.000000 0.044000" size="0.010000 0.014000 0.006000" rgba="0 0 0 0" mass="0.006" friction="4.0 0.10 0.01" condim="4" priority="3" contype="0" conaffinity="64" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
                       </body>
                       <body name="hande_right_finger_body" pos="-0.038000 0.000000 0.110000">
                         <joint name="hande_right_finger_joint" type="slide" axis="1 0 0" range="0.000000 0.030000" damping="8" armature="0.002" />
                         <geom name="hande_right_finger_visual" type="mesh" mesh="hande_finger" pos="0 0 0" quat="0 0 0 1" material="hande_finger_mat" contype="0" conaffinity="0" group="2" />
-                        <geom name="hande_right_pad_collision" type="box" pos="-0.003000 0.000000 0.044000" size="0.0035 0.009 0.0035" material="hande_finger_mat" mass="0.015" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" />
+                        <geom name="hande_right_pad_collision" type="box" pos="-0.003000 0.000000 0.044000" size="0.0035 0.009 0.0035" rgba="0 0 0 0" mass="0.015" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" group="3" />
+                        <geom name="hande_right_handle_push_collision" type="box" pos="-0.003000 0.000000 0.044000" size="0.010000 0.014000 0.006000" rgba="0 0 0 0" mass="0.006" friction="4.0 0.10 0.01" condim="4" priority="3" contype="0" conaffinity="64" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
+                      </body>
+                      <body name="realsense_wrist_mount" pos="0.000000 -0.055000 0.035000" quat="0.981627 -0.190809 0.000000 0.000000">
+                        <inertial pos="0.000000 0.000000 -0.012500" mass="0.072000" diaginertia="0.000008 0.000050 0.000050" />
+                        <geom name="realsense_d435i_0_00" type="mesh" mesh="d435i_0" contype="0" conaffinity="0" mass="0" group="2" material="IR_Lens" />
+                        <geom name="realsense_d435i_1_01" type="mesh" mesh="d435i_1" contype="0" conaffinity="0" mass="0" group="2" material="IR_Emitter_Lens" />
+                        <geom name="realsense_d435i_2_02" type="mesh" mesh="d435i_2" contype="0" conaffinity="0" mass="0" group="2" material="IR_Rim" />
+                        <geom name="realsense_d435i_3_03" type="mesh" mesh="d435i_3" contype="0" conaffinity="0" mass="0" group="2" material="IR_Lens" />
+                        <geom name="realsense_d435i_4_04" type="mesh" mesh="d435i_4" contype="0" conaffinity="0" mass="0" group="2" material="Cameras_Gray" />
+                        <geom name="realsense_d435i_5_05" type="mesh" mesh="d435i_5" contype="0" conaffinity="0" mass="0" group="2" material="Black_Acrylic" />
+                        <geom name="realsense_d435i_6_06" type="mesh" mesh="d435i_6" contype="0" conaffinity="0" mass="0" group="2" material="Black_Acrylic" />
+                        <geom name="realsense_d435i_7_07" type="mesh" mesh="d435i_7" contype="0" conaffinity="0" mass="0" group="2" material="RGB_Pupil" />
+                        <geom name="realsense_d435i_8_08" type="mesh" mesh="d435i_8" contype="0" conaffinity="0" mass="0" group="2" material="Metal_Casing" />
+                        <camera name="realsense_rgb" pos="0.032000 0.000000 0.004000" xyaxes="1 0 0 0 -1 0" fovy="58" />
+                        <site name="realsense_rgb_site" pos="0.032000 0.000000 0.004000" size="0.006" rgba="0.1 0.8 1 0.55" />
                       </body>
                     </body>
                   </body>
@@ -179,39 +218,85 @@
     <geom name="ceiling_mount" type="cylinder" pos="0 0 -0.035" size="0.085 0.035" material="joint_mat" contype="0" conaffinity="0" />
     <geom name="estimated_table" type="box" pos="-0.271848 0.414837 -1.010442" quat="1.000000 0.000000 0.000000 0.000000" size="0.350000 0.368783 0.025000" material="table_mat" rgba="0.720000 0.740000 0.720000 1.000000" />
     <body name="ti_tray_body" pos="-0.152840 0.420550 -0.993968" quat="1.000000 0.000000 0.000000 0.000000">
+      <inertial pos="-0.001287 -0.017132 0.017052" mass="0.005000000" diaginertia="0.000005 0.000002 0.000006" />
       <freejoint name="ti_tray_freejoint" />
-      <site name="ti_tray_protrusion_site" pos="0.000000 -0.051500 0.027500" size="0.006" rgba="1 0.3 0.05 0.8" />
-      <geom name="ti_tray_mesh_00" type="mesh" mesh="ti_tray_part_00" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_01" type="mesh" mesh="ti_tray_part_01" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_02" type="mesh" mesh="ti_tray_part_02" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_03" type="mesh" mesh="ti_tray_part_03" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_04" type="mesh" mesh="ti_tray_part_04" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_05" type="mesh" mesh="ti_tray_part_05" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_06" type="mesh" mesh="ti_tray_part_06" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_07" type="mesh" mesh="ti_tray_part_07" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_08" type="mesh" mesh="ti_tray_part_08" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_09" type="mesh" mesh="ti_tray_part_09" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_10" type="mesh" mesh="ti_tray_part_10" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_11" type="mesh" mesh="ti_tray_part_11" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_12" type="mesh" mesh="ti_tray_part_12" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_13" type="mesh" mesh="ti_tray_part_13" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_14" type="mesh" mesh="ti_tray_part_14" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_15" type="mesh" mesh="ti_tray_part_15" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_16" type="mesh" mesh="ti_tray_part_16" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_17" type="mesh" mesh="ti_tray_part_17" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_18" type="mesh" mesh="ti_tray_part_18" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_19" type="mesh" mesh="ti_tray_part_19" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_20" type="mesh" mesh="ti_tray_part_20" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_21" type="mesh" mesh="ti_tray_part_21" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_22" type="mesh" mesh="ti_tray_part_22" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_23" type="mesh" mesh="ti_tray_part_23" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_mesh_24" type="mesh" mesh="ti_tray_part_24" material="tray_mat" rgba="0.000000 0.580000 0.220000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
-      <geom name="ti_tray_protrusion_grasp_collision" type="box" pos="0.000000 -0.051500 0.027500" size="0.011000 0.012000 0.016500" rgba="0 0.58 0.22 0.35" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" mass="0.005000000" />
+      <site name="ti_tray_protrusion_site" pos="0.000000 -0.051500 0.027500" size="0.006" rgba="1 1 1 0.25" />
+      <site name="ti_tray_hole_1_site" pos="-0.020000 -0.030000 0.010300" size="0.0015" rgba="1 1 1 0.25" />
+      <site name="ti_tray_hole_2_site" pos="0.020000 -0.030000 0.010300" size="0.0015" rgba="1 1 1 0.25" />
+      <site name="ti_tray_hole_3_site" pos="-0.020000 0.030000 0.010300" size="0.0015" rgba="1 1 1 0.25" />
+      <site name="ti_tray_hole_4_site" pos="0.020000 0.030000 0.010300" size="0.0015" rgba="1 1 1 0.25" />
+      <geom name="ti_tray_mesh_00" type="mesh" mesh="ti_tray_part_00" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_01" type="mesh" mesh="ti_tray_part_01" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_02" type="mesh" mesh="ti_tray_part_02" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_03" type="mesh" mesh="ti_tray_part_03" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_04" type="mesh" mesh="ti_tray_part_04" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_05" type="mesh" mesh="ti_tray_part_05" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_06" type="mesh" mesh="ti_tray_part_06" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_07" type="mesh" mesh="ti_tray_part_07" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_08" type="mesh" mesh="ti_tray_part_08" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_09" type="mesh" mesh="ti_tray_part_09" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_10" type="mesh" mesh="ti_tray_part_10" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_11" type="mesh" mesh="ti_tray_part_11" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_12" type="mesh" mesh="ti_tray_part_12" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_13" type="mesh" mesh="ti_tray_part_13" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_14" type="mesh" mesh="ti_tray_part_14" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_15" type="mesh" mesh="ti_tray_part_15" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_16" type="mesh" mesh="ti_tray_part_16" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_17" type="mesh" mesh="ti_tray_part_17" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_18" type="mesh" mesh="ti_tray_part_18" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_19" type="mesh" mesh="ti_tray_part_19" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_20" type="mesh" mesh="ti_tray_part_20" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_21" type="mesh" mesh="ti_tray_part_21" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_22" type="mesh" mesh="ti_tray_part_22" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_23" type="mesh" mesh="ti_tray_part_23" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_mesh_24" type="mesh" mesh="ti_tray_part_24" material="tray_mat" rgba="0.960000 0.960000 0.930000 1.000000" group="2" contype="0" conaffinity="0" density="0" />
+      <geom name="ti_tray_protrusion_grasp_collision" type="box" pos="0.000000 -0.051500 0.027500" size="0.011000 0.012000 0.016500" rgba="1 1 1 0.12" friction="5.0 0.10 0.01" condim="4" priority="2" contype="2" conaffinity="2" solref="0.004 1" solimp="0.95 0.99 0.001" density="0" />
+      <geom name="ti_tray_hole_1_left_collision" type="box" pos="-0.024450 -0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_1_right_collision" type="box" pos="-0.015550 -0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_1_bottom_collision" type="box" pos="-0.020000 -0.034450 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_1_top_collision" type="box" pos="-0.020000 -0.025550 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_1_stop_seat_collision" type="cylinder" pos="-0.020000 -0.030000 0.009650" size="0.006600 0.000500" rgba="1 1 1 0.05" friction="0.6 0.02 0.002" condim="3" priority="4" contype="32" conaffinity="16" solref="0.012 1" solimp="0.82 0.96 0.002" density="0" group="3" />
+      <geom name="ti_tray_hole_2_left_collision" type="box" pos="0.015550 -0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_2_right_collision" type="box" pos="0.024450 -0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_2_bottom_collision" type="box" pos="0.020000 -0.034450 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_2_top_collision" type="box" pos="0.020000 -0.025550 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_2_stop_seat_collision" type="cylinder" pos="0.020000 -0.030000 0.009650" size="0.006600 0.000500" rgba="1 1 1 0.05" friction="0.6 0.02 0.002" condim="3" priority="4" contype="32" conaffinity="16" solref="0.012 1" solimp="0.82 0.96 0.002" density="0" group="3" />
+      <geom name="ti_tray_hole_3_left_collision" type="box" pos="-0.024450 0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_3_right_collision" type="box" pos="-0.015550 0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_3_bottom_collision" type="box" pos="-0.020000 0.025550 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_3_top_collision" type="box" pos="-0.020000 0.034450 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_3_stop_seat_collision" type="cylinder" pos="-0.020000 0.030000 0.005650" size="0.006600 0.000500" rgba="1 1 1 0.05" friction="0.6 0.02 0.002" condim="3" priority="4" contype="32" conaffinity="16" solref="0.012 1" solimp="0.82 0.96 0.002" density="0" group="3" />
+      <geom name="ti_tray_hole_4_left_collision" type="box" pos="0.015550 0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_4_right_collision" type="box" pos="0.024450 0.030000 0.010300" size="0.001000 0.005450 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_4_bottom_collision" type="box" pos="0.020000 0.025550 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_4_top_collision" type="box" pos="0.020000 0.034450 0.010300" size="0.003450 0.001000 0.001600" rgba="1 1 1 0.06" friction="0.4 0.02 0.002" condim="3" priority="3" contype="8" conaffinity="4" solref="0.006 1" solimp="0.90 0.98 0.001" density="0" group="3" />
+      <geom name="ti_tray_hole_4_stop_seat_collision" type="cylinder" pos="0.020000 0.030000 0.005650" size="0.006600 0.000500" rgba="1 1 1 0.05" friction="0.6 0.02 0.002" condim="3" priority="4" contype="32" conaffinity="16" solref="0.012 1" solimp="0.82 0.96 0.002" density="0" group="3" />
     </body>
-    <geom name="contact_marker_1" type="sphere" pos="-0.154090 0.407550 -0.985960" size="0.018" material="contact_mat" contype="0" conaffinity="0" />
-    <geom name="contact_marker_2" type="sphere" pos="-0.384670 0.392030 -0.986170" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
-    <geom name="contact_marker_3" type="sphere" pos="-0.306300 0.256150 -0.989630" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
-    <geom name="contact_marker_4" type="sphere" pos="-0.242330 0.603620 -0.980010" size="0.012" material="contact_mat" contype="0" conaffinity="0" />
+    <geom name="ti_assembly_pins" type="mesh" mesh="ti_assembly_pins" pos="-0.351590 0.493097 -0.984442" quat="1.000000 0.000000 0.000000 0.000000" material="ti_assembly_pin_mat" rgba="0.960000 0.960000 0.930000 1.000000" contype="0" conaffinity="0" group="2" />
+    <geom name="ti_assembly_plate" type="mesh" mesh="ti_assembly_plate" pos="-0.351590 0.493097 -0.984442" quat="1.000000 0.000000 0.000000 0.000000" material="ti_assembly_plate_mat" rgba="0.080000 0.300000 0.820000 1.000000" contype="0" conaffinity="0" group="2" />
+    <geom name="ti_assembly_grey" type="mesh" mesh="ti_assembly_grey" pos="-0.351590 0.493097 -0.984442" quat="1.000000 0.000000 0.000000 0.000000" material="ti_assembly_grey_mat" rgba="0.460000 0.500000 0.460000 1.000000" contype="0" conaffinity="0" group="2" />
+    <site name="ti_assembly_post_1_site" pos="-0.344090 0.500307 -0.951282" size="0.0015" rgba="1 1 1 0.35" />
+    <geom name="ti_assembly_post_1_collision" type="cylinder" fromto="-0.344090 0.509371 -0.955508 -0.344090 0.483993 -0.943677" size="0.003000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="4" conaffinity="8" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
+    <geom name="ti_assembly_post_1_stop_collision" type="cylinder" fromto="-0.344090 0.498041 -0.950226 -0.344090 0.495322 -0.948959" size="0.006000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="16" conaffinity="32" solref="0.012 1" solimp="0.82 0.96 0.002" group="3" />
+    <site name="ti_assembly_post_2_site" pos="-0.304090 0.500307 -0.951282" size="0.0015" rgba="1 1 1 0.35" />
+    <geom name="ti_assembly_post_2_collision" type="cylinder" fromto="-0.304090 0.509371 -0.955508 -0.304090 0.483993 -0.943677" size="0.003000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="4" conaffinity="8" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
+    <geom name="ti_assembly_post_2_stop_collision" type="cylinder" fromto="-0.304090 0.498041 -0.950226 -0.304090 0.495322 -0.948959" size="0.006000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="16" conaffinity="32" solref="0.012 1" solimp="0.82 0.96 0.002" group="3" />
+    <site name="ti_assembly_post_3_site" pos="-0.344090 0.525657 -0.896902" size="0.0015" rgba="1 1 1 0.35" />
+    <geom name="ti_assembly_post_3_collision" type="cylinder" fromto="-0.344090 0.538346 -0.902818 -0.344090 0.512968 -0.890987" size="0.003000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="4" conaffinity="8" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
+    <geom name="ti_assembly_post_3_stop_collision" type="cylinder" fromto="-0.344090 0.527017 -0.897536 -0.344090 0.524297 -0.896269" size="0.006000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="16" conaffinity="32" solref="0.012 1" solimp="0.82 0.96 0.002" group="3" />
+    <site name="ti_assembly_post_4_site" pos="-0.304090 0.525657 -0.896902" size="0.0015" rgba="1 1 1 0.35" />
+    <geom name="ti_assembly_post_4_collision" type="cylinder" fromto="-0.304090 0.538346 -0.902818 -0.304090 0.512968 -0.890987" size="0.003000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="4" conaffinity="8" solref="0.006 1" solimp="0.90 0.98 0.001" group="3" />
+    <geom name="ti_assembly_post_4_stop_collision" type="cylinder" fromto="-0.304090 0.527017 -0.897536 -0.304090 0.524297 -0.896269" size="0.006000" rgba="1 1 1 0.08" friction="0.4 0.02 0.002" condim="3" priority="3" contype="16" conaffinity="32" solref="0.012 1" solimp="0.82 0.96 0.002" group="3" />
+    <body name="ti_presser_body" pos="-0.296310 0.521840 -0.883422" quat="0.954765 0.297362 0.000000 0.000000">
+      <body name="ti_presser_handle_body" pos="-0.027640 0.007584 0.056595">
+        <joint name="ti_presser_handle_hinge_joint" type="hinge" axis="1 0 0" range="-1.200000 1.350000" limited="true" damping="0.04" armature="0.00008" frictionloss="0.02" />
+        <inertial pos="-0.000000 0.000058 -0.003315" mass="0.020000000" diaginertia="0.000002 0.000005 0.000005" />
+        <site name="ti_presser_handle_pivot_site" pos="0 0 0" size="0.0015" />
+        <site name="ti_presser_handle_grip_site" pos="0.000000 0.017000 0.032000" size="0.002" rgba="1 0.2 0.05 0.45" />
+        <geom name="ti_presser_handle_link_visual" type="capsule" fromto="0.000000 0.000000 0.000000 0.000000 0.017000 0.032000" size="0.002600" material="ti_presser_red_mat" rgba="0.750000 0.000000 0.000000 1.000000" contype="64" conaffinity="0" density="0" friction="1.0 0.02 0.002" condim="4" priority="4" solref="0.006 1" solimp="0.92 0.98 0.001" group="2" />
+        <geom name="ti_presser_handle_grip_visual" type="capsule" fromto="-0.042000 0.017000 0.032000 0.042000 0.017000 0.032000" size="0.006500" material="ti_presser_red_mat" rgba="0.750000 0.000000 0.000000 1.000000" contype="64" conaffinity="0" density="0" friction="1.0 0.02 0.002" condim="4" priority="4" solref="0.006 1" solimp="0.92 0.98 0.001" group="2" />
+      </body>
+    </body>
   </worldbody>
   <actuator>
     <general class="size3" name="shoulder_pan" joint="shoulder_pan_joint" gainprm="10000" biasprm="0 -10000 -200" forcerange="-600 600" />
@@ -224,8 +309,8 @@
     <general name="hande_right_finger" joint="hande_right_finger_joint" gaintype="fixed" biastype="affine" ctrlrange="0.000000 0.030000" gainprm="3000" biasprm="0 -3000 -80" forcerange="-300 300" />
   </actuator>
   <keyframe>
-    <key name="contact_1" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000" />
-    <key name="grasp_open" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000" />
-    <key name="grasp_closed" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.030000 0.030000" />
+    <key name="contact_1" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000" />
+    <key name="grasp_open" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000" />
+    <key name="grasp_closed" qpos="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.000000 0.000000 -0.152840 0.420550 -0.993968 1.000000 0.000000 0.000000 0.000000 0.000000" ctrl="-2.253569 -0.470192 -1.303761 0.256214 1.549329 -0.657989 0.030000 0.030000" />
   </keyframe>
 </mujoco>

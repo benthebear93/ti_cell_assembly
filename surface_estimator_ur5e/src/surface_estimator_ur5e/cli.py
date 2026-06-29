@@ -132,8 +132,28 @@ def main(argv: list[str] | None = None) -> int:
     run_mujoco_grasp_parser.add_argument(
         "--attach-mode",
         choices=("kinematic", "physics"),
-        default="physics",
+        default="kinematic",
     )
+    run_mujoco_grasp_parser.add_argument(
+        "--viewer-camera",
+        default="free",
+        help="Main MuJoCo viewer camera; use 'free' for the overview free camera.",
+    )
+    run_mujoco_grasp_parser.add_argument(
+        "--realsense-camera",
+        default="realsense_rgb",
+        help="MJCF camera used for the separate RealSense RGB, depth, and point-cloud windows.",
+    )
+    run_mujoco_grasp_parser.add_argument(
+        "--no-realsense-windows",
+        action="store_true",
+        help="Disable the separate RealSense RGB, depth, and point-cloud windows.",
+    )
+    run_mujoco_grasp_parser.add_argument("--realsense-width", type=int, default=640)
+    run_mujoco_grasp_parser.add_argument("--realsense-height", type=int, default=480)
+    run_mujoco_grasp_parser.add_argument("--realsense-hz", type=float, default=15.0)
+    run_mujoco_grasp_parser.add_argument("--pointcloud-stride", type=int, default=4)
+    run_mujoco_grasp_parser.add_argument("--pointcloud-max-depth-m", type=float, default=2.0)
     run_mujoco_grasp_parser.add_argument(
         "--limit-mode",
         choices=("error", "clamp", "ignore"),
@@ -283,6 +303,14 @@ def main(argv: list[str] | None = None) -> int:
                 lift_m=args.lift_m,
                 limit_mode=args.limit_mode,
                 attach_mode=args.attach_mode,
+                viewer_camera=args.viewer_camera,
+                show_realsense_windows=not args.no_realsense_windows,
+                realsense_camera=args.realsense_camera,
+                realsense_width=args.realsense_width,
+                realsense_height=args.realsense_height,
+                realsense_hz=args.realsense_hz,
+                pointcloud_stride=args.pointcloud_stride,
+                pointcloud_max_depth_m=args.pointcloud_max_depth_m,
             )
             return 0
 

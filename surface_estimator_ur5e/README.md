@@ -271,12 +271,35 @@ geometry/context model, not a collision-accurate actuated robot model. If the op
 Python package is installed, add `--compile-check` to compile-check the MJCF
 before writing it.
 
-## UR5e + Robotiq Hand-E Assets
+## Run The MuJoCo Grasp/Insert Demo
 
-The MuJoCo export uses the local UR5e MJCF meshes in `assets/universal_robots_ur5e`
-and the local Robotiq Hand-E OBJ meshes in `assets/robotiq_hande_description`
-when present. It also spawns `assets/ti_tray/ti_tray.obj` on the table if that
-mesh exists. See [assets/README.md](assets/README.md) for source and license notes.
+Generate the actuated grasp scene, then run the scripted grasp and insert motion:
+
+```bash
+uv run surface-estimator export-mujoco-grasp \
+  --input data/example_contacts.yaml \
+  --output models/ur5e_hande_tray_grasp_scene.xml \
+  --compile-check
+
+uv run surface-estimator run-mujoco-grasp \
+  --mjcf models/ur5e_hande_tray_grasp_scene.xml
+```
+
+The generated robot mounts `assets/realsense_d435i` on the wrist/tool frame.
+`run-mujoco-grasp` keeps the main MuJoCo viewer in the overview-style free
+camera by default, and opens separate OpenCV `RealSense RGB` and `RealSense
+Depth` windows plus an Open3D `RealSense Point Cloud` window from the
+wrist-mounted `realsense_rgb` camera. Use `--no-realsense-windows` to disable
+those extra windows, or `--viewer-camera overview` to force the main MuJoCo
+viewer to the fixed overview camera.
+
+## UR5e + Robotiq Hand-E + RealSense Assets
+
+The MuJoCo export uses local UR5e MJCF meshes in `assets/universal_robots_ur5e`,
+local Robotiq Hand-E OBJ meshes in `assets/robotiq_hande_description`, and local
+RealSense D435i MJCF meshes in `assets/realsense_d435i` when present.
+It also spawns `assets/ti_tray/ti_tray.obj` on the table if that mesh exists.
+See [assets/README.md](assets/README.md) for source and license notes.
 
 ## Limitations
 
