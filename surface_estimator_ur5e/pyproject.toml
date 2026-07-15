@@ -14,7 +14,8 @@ dependencies = [
     "robot-descriptions>=1.20.0",
     "xacrodoc>=0.3.0",
     "ur-rtde>=1.6.0",
-    "opencv-python>=4.13.0.92",
+    "opencv-contrib-python>=4.13.0.92",
+    "pyrealsense2>=2.58.1.10581",
     "open3d>=0.19.0",
 ]
 

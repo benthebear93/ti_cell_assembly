@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkCellCalibration>
+ <FixedFrameCalibration>
+  <FixedFrameCalibration frame="Marker">
+   <Transform3D>1 0 0 0 0 1 0 0 -0 0 1 0 </Transform3D>
+   <RPY/>
+   <RPY>0 0 0</RPY>
+  </FixedFrameCalibration>
+ </FixedFrameCalibration>
+ <FixedFrameCalibration>
+  <FixedFrameCalibration frame="Camera">
+   <Transform3D>1 0 0 0 0 1 0 0 -0 0 1 0 </Transform3D>
+   <RPY/>
+   <RPY>0 0 0</RPY>
+  </FixedFrameCalibration>
+ </FixedFrameCalibration>
+ <CalibrationResult>
+  <StaticTransform frame="Marker">
+   <Vector3D>-0.3458867548904817 -0.2145566724464179 0.9881838420317571</Vector3D>
+   <RPY>
+    <RPY>-91.81679411884221 1.193624084640601 0.5213490735374274</RPY>
+   </RPY>
+   <Rotation3D>
+    <Rotation3D>-0.031696846297875329 0.99944992408809186 -0.0097549564364108991 -0.99928042738980338 -0.031891863520403949 -0.020531353507453168 -0.020831163443767349 0.0090971578805325096 0.99974161879361401</Rotation3D>
+   </Rotation3D>
+   <Quaternion>
+    <Quaternion>0.01064657725415399 0.003980074869189685 -0.7182148579310883 0.6957285585943944</Quaternion>
+   </Quaternion>
+   <EAA>
+    <EAA>0.02375529010332033 0.008880584895361166 -1.602524632976399</EAA>
+   </EAA>
+  </StaticTransform>
+  <MovingTransform frame="Camera">
+   <Vector3D>-0.03311419055809151 0.1306716587266417 -0.08140651495275325</Vector3D>
+   <RPY>
+    <RPY>-0.6109518720306889 -1.176404093453619 82.44027467811945</RPY>
+   </RPY>
+   <Rotation3D>
+    <Rotation3D>0.999732384770046 -0.018948268311358239 -0.013271095282513565 -0.01066067217461495 0.13176914173500348 -0.99122310473233322 0.020530682180146063 0.99109931712942956 0.13153187702909316</Rotation3D>
+   </Rotation3D>
+   <Quaternion>
+    <Quaternion>0.6588686071604015 -0.01123476675174361 0.002754565484960629 0.7521690972670544</Quaternion>
+   </Quaternion>
+   <EAA>
+    <EAA>1.438675801731867 -0.02453173043635441 0.00601474507121856</EAA>
+   </EAA>
+  </MovingTransform>
+  <Statistics>
+   <AverageDist>
+    <Double>3.044293684659678</Double>
+   </AverageDist>
+   <AverageAngle>
+    <Double>0.4735768763225523</Double>
+   </AverageAngle>
+   <MinDist>
+    <Double>1.1199366183037356</Double>
+   </MinDist>
+   <MinAngle>
+    <Double>0.13127408727554951</Double>
+   </MinAngle>
+   <MaxDist>
+    <Double>5.3483936568625019</Double>
+   </MaxDist>
+   <MaxAngle>
+    <Double>0.97336662796464368</Double>
+   </MaxAngle>
+  </Statistics>
+ </CalibrationResult>
+</WorkCellCalibration>

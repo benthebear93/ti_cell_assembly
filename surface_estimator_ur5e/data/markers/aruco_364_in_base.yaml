@@ -1,0 +1,73 @@
+marker_id: 364
+dictionary: DICT_ARUCO_ORIGINAL
+marker_length_m: 0.0254
+marker_origin: center
+pose_in_base:
+  translation_m:
+  - -0.080045778
+  - -0.467840883
+  - 0.997781286
+  rotation_quaternion_xyzw:
+  - 0.015864057
+  - 0.990980893
+  - 0.060478223
+  - -0.118522513
+  rotation_rpy_deg:
+  - 173.136482
+  - -13.699281
+  - 178.991154
+  rotation_matrix:
+  - - -0.971401491
+    - 0.045778017
+    - -0.232988231
+  - - 0.017105894
+    - 0.992181433
+    - 0.123626022
+  - - 0.236825951
+    - 0.11610503
+    - -0.964589597
+  transform_matrix:
+  - - -0.971401491
+    - 0.045778017
+    - -0.232988231
+    - -0.080045778
+  - - 0.017105894
+    - 0.992181433
+    - 0.123626022
+    - -0.467840883
+  - - 0.236825951
+    - 0.11610503
+    - -0.964589597
+    - 0.997781286
+  - - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+capture_quality:
+  samples: 50
+  translation_std_mm_xyz:
+  - 0.1065
+  - 0.0809
+  - 0.5056
+  translation_range_mm_xyz:
+  - 0.5399
+  - 0.376
+  - 2.5816
+camera_observation_median:
+  translation_m:
+  - -0.017797131
+  - -0.128015812
+  - 0.409598907
+source:
+  robot_ip: 192.168.0.24
+  tcp_offset_ur:
+  - 0.0
+  - 0.0
+  - 0.158
+  - -1.5707
+  - 0.0
+  - 0.0
+  set_tcp_before_capture: true
+  intrinsics: data/calibration/realsense_ur5e/camera_intrinsics.yaml
+  calibration: data/calibration/realsense_ur5e/Calibration.xml
+  captured_at: '2026-07-14T14:31:11+02:00'

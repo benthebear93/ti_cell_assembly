@@ -1,0 +1,59 @@
+marker_id: 364
+marker_pose_file: data/markers/aruco_364_in_base.yaml
+marker_frame_mode: floor
+offset_marker_m:
+- 0.043
+- 0.0455
+- -0.1
+height_above_marker_m: 0.1
+orientation_mode: current
+target_tcp_pose_ur:
+- -0.1238402205
+- -0.5125767389
+- 0.897781286
+- -1.2052082715
+- -1.208916083
+- 1.2219476042
+target_tcp_position_m:
+- -0.1238402205
+- -0.5125767389
+- 0.897781286
+target_tcp_rotation_vector_rad:
+- -1.2052082715
+- -1.208916083
+- 1.2219476042
+current_tcp_pose_ur_at_plan_time:
+- -0.2368442756
+- -0.4167985216
+- 0.7063085774
+- -1.2052082715
+- -1.208916083
+- 1.2219476042
+distance_from_current_tcp_mm: 242.085
+base_T_marker:
+- - -0.9998449888
+  - -0.0176067698
+  - 0.0
+  - -0.080045778
+- - 0.0176067698
+  - -0.9998449888
+  - 0.0
+  - -0.467840883
+- - 0.0
+  - 0.0
+  - 1.0
+  - 0.997781286
+- - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+robot_ip: 192.168.0.24
+tcp_offset_ur:
+- 0.0
+- 0.0
+- 0.158
+- -1.5707
+- 0.0
+- 0.0
+set_tcp_before_plan: true
+created_at: '2026-07-14T14:32:54+02:00'

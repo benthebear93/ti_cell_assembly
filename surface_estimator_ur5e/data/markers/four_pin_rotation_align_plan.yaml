@@ -1,0 +1,85 @@
+marker_id: 364
+marker_pose_file: data/markers/aruco_364_in_base.yaml
+marker_frame_mode: floor
+base_T_four_pin_center:
+- - 0.0176067541
+  - -0.9061671689
+  - -0.4225530312
+  - -0.0032025085
+- - 0.9998449891
+  - 0.0159571361
+  - 0.0074409408
+  - -0.4231869229
+- - 0.0
+  - -0.4226185417
+  - 0.9063076565
+  - 0.935643011
+- - 0.0
+  - 0.0
+  - 0.0
+  - 1.0
+marker_floor_z_m: 0.997781286
+tcp_rotation_offset_rpy_deg:
+- 0.0
+- 0.0
+- 0.0
+current_tcp_pose_ur:
+- -0.2304561908
+- -0.41787272
+- 0.9263539127
+- -1.2059866324
+- -1.2098277913
+- 1.2039198179
+target_tcp_pose_ur:
+- -0.2304561908
+- -0.41787272
+- 0.9263539127
+- -0.3443892795
+- -0.3383781544
+- 1.5263241028
+lifted_current_tcp_pose_ur:
+- -0.2304561908
+- -0.41787272
+- 0.9113539127
+- -1.2059866324
+- -1.2098277913
+- 1.2039198179
+lifted_target_tcp_pose_ur:
+- -0.2304561908
+- -0.41787272
+- 0.9113539127
+- -0.3443892795
+- -0.3383781544
+- 1.5263241028
+rotation_delta_deg: 64.979273
+tray_center_tcp_z_m: -0.04875
+tray_local_rx_deg: -90.0
+safe_floor_clearance_m: 0.015
+min_pre_rotation_lift_m: 0.015
+current_tray_floor_clearance_m: 0.0540235827
+target_tray_floor_clearance_without_lift_m: 0.0708385973
+safety_lift_m: 0.015
+current_tray_center_m:
+- -0.1817063057
+- -0.4179765269
+- 0.9263331723
+target_rotation_tray_center_m:
+- -0.2098567305
+- -0.4182354659
+- 0.8821714145
+lifted_target_rotation_tray_center_m:
+- -0.2098567305
+- -0.4182354659
+- 0.8671714145
+four_pin_center_m:
+- -0.0032025085
+- -0.4231869229
+- 0.935643011
+robot_ip: 192.168.0.24
+tcp_offset_ur:
+- 0.0
+- 0.0
+- 0.158
+- -1.5707
+- 0.0
+- 0.0

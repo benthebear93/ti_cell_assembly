@@ -1,0 +1,58 @@
+captured_at: '2026-07-15T11:44:52+02:00'
+label: aligned
+step_index: 34
+axis: y
+angle_deg: -3.75
+tcp_local_x_offset_mm: 0.0
+tcp_local_z_offset_mm: -3.75
+step_deg: 0.25
+translation_step_mm: 0.25
+max_abs_angle_deg: 15.0
+max_abs_translation_mm: 15.0
+execute: true
+set_tcp_before_motion: true
+tcp_offset_ur:
+- 0.0
+- 0.0
+- 0.158
+- -1.5707
+- 0.0
+- 0.0
+start_tcp_pose_ur:
+- -0.056034653793154865
+- -0.42226198665678677
+- 0.9608844493123059
+- -0.34451706130304127
+- -0.33854389391709305
+- 1.5263571243300158
+target_tcp_pose_ur:
+- -0.0540267294005044
+- -0.42229716876294554
+- 0.9565798585242279
+- -0.29500401578654134
+- -0.38999754267812164
+- 1.5400091830597962
+actual_tcp_pose_ur:
+- -0.05405299479291287
+- -0.4223163589654437
+- 0.9565760676090656
+- -0.2950118189244154
+- -0.3900531427486444
+- 1.5399866762050258
+color_intrinsics:
+  width: 1280
+  height: 720
+  ppx: 639.6598510742188
+  ppy: 357.4417724609375
+  fx: 905.7272338867188
+  fy: 904.8741455078125
+  model: distortion.inverse_brown_conrady
+  coeffs:
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+files:
+  color: images/tcp_image_alignment_20260715_114251/aligned_034_y_m03p750deg_xp00p000mm_zm04p750mm_color.png
+  latest_color: images/tcp_image_alignment_20260715_114251/latest_color.png

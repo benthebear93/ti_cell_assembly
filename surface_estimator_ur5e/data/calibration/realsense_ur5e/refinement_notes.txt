@@ -1,0 +1,22 @@
+Excluded original indices: 1,4,5,6,11,15
+Kept original indices: 0,2,3,7,8,9,10,12,13,14,16,17,18,19,20,21,22,23,24
+
+image_000.png <- image_000.png
+image_001.png <- image_002.png
+image_002.png <- image_003.png
+image_003.png <- image_007.png
+image_004.png <- image_008.png
+image_005.png <- image_009.png
+image_006.png <- image_010.png
+image_007.png <- image_012.png
+image_008.png <- image_013.png
+image_009.png <- image_014.png
+image_010.png <- image_016.png
+image_011.png <- image_017.png
+image_012.png <- image_018.png
+image_013.png <- image_019.png
+image_014.png <- image_020.png
+image_015.png <- image_021.png
+image_016.png <- image_022.png
+image_017.png <- image_023.png
+image_018.png <- image_024.png
