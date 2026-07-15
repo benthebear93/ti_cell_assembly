@@ -47,8 +47,16 @@ DEFAULT_POST_INSERT_RETREAT_Y_MM = 50.0
 DEFAULT_POST_INSERT_TWO_PIN_TARGET_Y_MM = 19.0
 DEFAULT_POST_TWO_PIN_CLOSE_RETREAT_Y_MM = 30.0
 DEFAULT_POST_TWO_PIN_CLOSE_SHIFT_NEGATIVE_X_MM = 58.0
-DEFAULT_POST_TWO_PIN_ALIGNED_INSERT_Y_MM = 20.0
-DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM = 30.0
+DEFAULT_POST_TWO_PIN_ALIGNED_INSERT_Y_MM = 17.0
+DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM = 150.0
+DEFAULT_POST_TWO_PIN_RELEASE_SHIFT_Z_MM = -170.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_X_MM = 20.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_Y_MM = -150.0
+DEFAULT_POST_TWO_PIN_RELEASE_ROTATE_X_DEG = -45.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_CLOSE_PERCENT = 50.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_Y_MM = -40.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Y_MM = 30.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Z_MM = 100.0
 DEFAULT_TCP_ROTATION_OFFSET_RPY_DEG = (0.0, 0.0, 0.0)
 DEFAULT_INITIAL_Q_DEG = [44.85, -15.96, -81.60, 7.72, 89.63, 135.01]
 DEFAULT_POST_GRASP_LIFT_MM = 15.0
@@ -352,7 +360,7 @@ def parse_args() -> argparse.Namespace:
         "--post-two-pin-aligned-insert-release",
         dest="post_two_pin_aligned_insert_release",
         action="store_true",
-        help="Draw the final post-alignment TCP local -Y insertion, gripper release, and +Y retreat.",
+        help="Draw the final post-alignment TCP local -Y insertion, gripper release, +Y retreat, and Z shift.",
     )
     parser.add_argument(
         "--no-post-two-pin-aligned-insert-release",
@@ -371,6 +379,54 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM,
         help="TCP-local +Y retreat after opening at the final post-two-pin insertion.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-shift-z-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_SHIFT_Z_MM,
+        help="TCP-local Z move after the final +Y release retreat.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_Y_MM,
+        help="TCP-local Y move after the final release Z shift.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-x-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_X_MM,
+        help="TCP-local X move sent together with the final release Y move.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-rotate-x-deg",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_ROTATE_X_DEG,
+        help="TCP-local X-axis rotation after the final release X/Y translation.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-close-percent",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_CLOSE_PERCENT,
+        help="Gripper close percent after the final release X-axis rotation.",
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_Y_MM,
+        help="TCP-local Y move after the final post-two-pin gripper close.",
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-final-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Y_MM,
+        help="TCP-local Y move sent together with the final after-close Z move.",
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-final-z-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Z_MM,
+        help="TCP-local Z move sent together with the final after-close Y move.",
     )
     parser.add_argument(
         "--show-motion-trajectory",
@@ -689,6 +745,14 @@ def marker_motion_args_from_visualization(args: argparse.Namespace) -> argparse.
         post_two_pin_aligned_insert_release=args.post_two_pin_aligned_insert_release,
         post_two_pin_aligned_insert_y_mm=args.post_two_pin_aligned_insert_y_mm,
         post_two_pin_release_retreat_y_mm=args.post_two_pin_release_retreat_y_mm,
+        post_two_pin_release_shift_z_mm=args.post_two_pin_release_shift_z_mm,
+        post_two_pin_release_final_x_mm=args.post_two_pin_release_final_x_mm,
+        post_two_pin_release_final_y_mm=args.post_two_pin_release_final_y_mm,
+        post_two_pin_release_rotate_x_deg=args.post_two_pin_release_rotate_x_deg,
+        post_two_pin_release_final_close_percent=args.post_two_pin_release_final_close_percent,
+        post_two_pin_after_close_y_mm=args.post_two_pin_after_close_y_mm,
+        post_two_pin_after_close_final_y_mm=args.post_two_pin_after_close_final_y_mm,
+        post_two_pin_after_close_final_z_mm=args.post_two_pin_after_close_final_z_mm,
         tray_obj=args.virtual_tray_obj,
         tray_center_tcp_z_mm=args.virtual_tray_tcp_z_mm,
         tray_local_rx_deg=args.virtual_tray_local_rx_deg,
@@ -1413,6 +1477,11 @@ def add_motion_plan_frames(
     post_two_pin_close_image_alignment_metadata = None
     post_two_pin_aligned_insert_pose = None
     post_two_pin_release_retreat_pose = None
+    post_two_pin_release_shift_z_pose = None
+    post_two_pin_release_final_y_pose = None
+    post_two_pin_release_rotate_x_pose = None
+    post_two_pin_after_close_y_pose = None
+    post_two_pin_after_close_yz_pose = None
     if insertion_pose is not None and motion_args.post_insert_release_retreat:
         (
             post_insert_retreat_y_pose,
@@ -1456,8 +1525,18 @@ def add_motion_plan_frames(
                         (
                             post_two_pin_aligned_insert_pose,
                             post_two_pin_release_retreat_pose,
+                            post_two_pin_release_shift_z_pose,
+                            post_two_pin_release_final_y_pose,
+                            post_two_pin_release_rotate_x_pose,
                         ) = motion.post_two_pin_aligned_insert_release_target_poses(
                             post_two_pin_close_image_correction_pose,
+                            motion_args,
+                        )
+                        (
+                            (_, post_two_pin_after_close_y_pose),
+                            (_, post_two_pin_after_close_yz_pose),
+                        ) = motion.post_two_pin_after_close_target_poses(
+                            post_two_pin_release_rotate_x_pose,
                             motion_args,
                         )
 
@@ -1508,6 +1587,31 @@ def add_motion_plan_frames(
         if post_two_pin_release_retreat_pose is not None
         else None
     )
+    base_t_post_two_pin_release_shift_z = (
+        ur_pose_to_transform(post_two_pin_release_shift_z_pose)
+        if post_two_pin_release_shift_z_pose is not None
+        else None
+    )
+    base_t_post_two_pin_release_final_y = (
+        ur_pose_to_transform(post_two_pin_release_final_y_pose)
+        if post_two_pin_release_final_y_pose is not None
+        else None
+    )
+    base_t_post_two_pin_release_rotate_x = (
+        ur_pose_to_transform(post_two_pin_release_rotate_x_pose)
+        if post_two_pin_release_rotate_x_pose is not None
+        else None
+    )
+    base_t_post_two_pin_after_close_y = (
+        ur_pose_to_transform(post_two_pin_after_close_y_pose)
+        if post_two_pin_after_close_y_pose is not None
+        else None
+    )
+    base_t_post_two_pin_after_close_yz = (
+        ur_pose_to_transform(post_two_pin_after_close_yz_pose)
+        if post_two_pin_after_close_yz_pose is not None
+        else None
+    )
 
     display_t_pin = display_transform @ base_t_pin
     display_t_rotation = display_transform @ base_t_rotation
@@ -1555,6 +1659,31 @@ def add_motion_plan_frames(
     display_t_post_two_pin_release_retreat = (
         display_transform @ base_t_post_two_pin_release_retreat
         if base_t_post_two_pin_release_retreat is not None
+        else None
+    )
+    display_t_post_two_pin_release_shift_z = (
+        display_transform @ base_t_post_two_pin_release_shift_z
+        if base_t_post_two_pin_release_shift_z is not None
+        else None
+    )
+    display_t_post_two_pin_release_final_y = (
+        display_transform @ base_t_post_two_pin_release_final_y
+        if base_t_post_two_pin_release_final_y is not None
+        else None
+    )
+    display_t_post_two_pin_release_rotate_x = (
+        display_transform @ base_t_post_two_pin_release_rotate_x
+        if base_t_post_two_pin_release_rotate_x is not None
+        else None
+    )
+    display_t_post_two_pin_after_close_y = (
+        display_transform @ base_t_post_two_pin_after_close_y
+        if base_t_post_two_pin_after_close_y is not None
+        else None
+    )
+    display_t_post_two_pin_after_close_yz = (
+        display_transform @ base_t_post_two_pin_after_close_yz
+        if base_t_post_two_pin_after_close_yz is not None
         else None
     )
 
@@ -1655,6 +1784,41 @@ def add_motion_plan_frames(
             server,
             "/frames/post_two_pin_release_retreat_tcp_target",
             display_t_post_two_pin_release_retreat,
+            axes_length=0.05,
+        )
+    if display_t_post_two_pin_release_shift_z is not None:
+        add_frame(
+            server,
+            "/frames/post_two_pin_release_shift_z_tcp_target",
+            display_t_post_two_pin_release_shift_z,
+            axes_length=0.05,
+        )
+    if display_t_post_two_pin_release_final_y is not None:
+        add_frame(
+            server,
+            "/frames/post_two_pin_release_final_y_tcp_target",
+            display_t_post_two_pin_release_final_y,
+            axes_length=0.05,
+        )
+    if display_t_post_two_pin_release_rotate_x is not None:
+        add_frame(
+            server,
+            "/frames/post_two_pin_release_rotate_x_tcp_target",
+            display_t_post_two_pin_release_rotate_x,
+            axes_length=0.05,
+        )
+    if display_t_post_two_pin_after_close_y is not None:
+        add_frame(
+            server,
+            "/frames/post_two_pin_after_close_y_tcp_target",
+            display_t_post_two_pin_after_close_y,
+            axes_length=0.05,
+        )
+    if display_t_post_two_pin_after_close_yz is not None:
+        add_frame(
+            server,
+            "/frames/post_two_pin_after_close_yz_tcp_target",
+            display_t_post_two_pin_after_close_yz,
             axes_length=0.05,
         )
 
@@ -1810,6 +1974,61 @@ def add_motion_plan_frames(
             display_t_post_two_pin_release_retreat[:3, 3],
             (80, 80, 80),
         )
+    if (
+        display_t_post_two_pin_release_shift_z is not None
+        and display_t_post_two_pin_release_retreat is not None
+    ):
+        add_line_segment(
+            server,
+            "/motion_frames/post_two_pin_release_retreat_to_shift_z",
+            display_t_post_two_pin_release_retreat[:3, 3],
+            display_t_post_two_pin_release_shift_z[:3, 3],
+            (90, 90, 90),
+        )
+    if (
+        display_t_post_two_pin_release_final_y is not None
+        and display_t_post_two_pin_release_shift_z is not None
+    ):
+        add_line_segment(
+            server,
+            "/motion_frames/post_two_pin_release_shift_z_to_final_y",
+            display_t_post_two_pin_release_shift_z[:3, 3],
+            display_t_post_two_pin_release_final_y[:3, 3],
+            (70, 70, 70),
+        )
+    if (
+        display_t_post_two_pin_release_rotate_x is not None
+        and display_t_post_two_pin_release_final_y is not None
+    ):
+        add_line_segment(
+            server,
+            "/motion_frames/post_two_pin_release_final_y_to_rotate_x",
+            display_t_post_two_pin_release_final_y[:3, 3],
+            display_t_post_two_pin_release_rotate_x[:3, 3],
+            (120, 120, 120),
+        )
+    if (
+        display_t_post_two_pin_after_close_y is not None
+        and display_t_post_two_pin_release_rotate_x is not None
+    ):
+        add_line_segment(
+            server,
+            "/motion_frames/post_two_pin_release_rotate_x_to_after_close_y",
+            display_t_post_two_pin_release_rotate_x[:3, 3],
+            display_t_post_two_pin_after_close_y[:3, 3],
+            (80, 120, 120),
+        )
+    if (
+        display_t_post_two_pin_after_close_yz is not None
+        and display_t_post_two_pin_after_close_y is not None
+    ):
+        add_line_segment(
+            server,
+            "/motion_frames/post_two_pin_after_close_y_to_yz",
+            display_t_post_two_pin_after_close_y[:3, 3],
+            display_t_post_two_pin_after_close_yz[:3, 3],
+            (60, 120, 160),
+        )
 
     print("Motion-plan coordinate frames:")
     print(f"  holder four-pin frame base position m: {fmt(base_t_pin[:3, 3])}")
@@ -1922,6 +2141,53 @@ def add_motion_plan_frames(
             "  post-two-pin release retreat TCP target base m: "
             f"{fmt(base_t_post_two_pin_release_retreat[:3, 3])}"
         )
+    if base_t_post_two_pin_release_shift_z is not None:
+        print(
+            "  post-two-pin release TCP local Z shift mm: "
+            f"{args.post_two_pin_release_shift_z_mm:.3f}"
+        )
+        print(
+            "  post-two-pin release Z-shift TCP target base m: "
+            f"{fmt(base_t_post_two_pin_release_shift_z[:3, 3])}"
+        )
+    if base_t_post_two_pin_release_final_y is not None:
+        print(
+            "  post-two-pin release TCP local final X/Y shift mm: "
+            f"{args.post_two_pin_release_final_x_mm:.3f}/"
+            f"{args.post_two_pin_release_final_y_mm:.3f}"
+        )
+        print(
+            "  post-two-pin release final-X/Y TCP target base m: "
+            f"{fmt(base_t_post_two_pin_release_final_y[:3, 3])}"
+        )
+    if base_t_post_two_pin_release_rotate_x is not None:
+        print(
+            "  post-two-pin release TCP local X rotation deg: "
+            f"{args.post_two_pin_release_rotate_x_deg:.3f}"
+        )
+        print(
+            "  post-two-pin release rotate-X TCP target base m: "
+            f"{fmt(base_t_post_two_pin_release_rotate_x[:3, 3])}"
+        )
+    if base_t_post_two_pin_after_close_y is not None:
+        print(
+            "  post-two-pin after-close TCP local Y shift mm: "
+            f"{args.post_two_pin_after_close_y_mm:.3f}"
+        )
+        print(
+            "  post-two-pin after-close Y-shift TCP target base m: "
+            f"{fmt(base_t_post_two_pin_after_close_y[:3, 3])}"
+        )
+    if base_t_post_two_pin_after_close_yz is not None:
+        print(
+            "  post-two-pin after-close TCP local final Y/Z shift mm: "
+            f"{args.post_two_pin_after_close_final_y_mm:.3f}/"
+            f"{args.post_two_pin_after_close_final_z_mm:.3f}"
+        )
+        print(
+            "  post-two-pin after-close final-Y/Z TCP target base m: "
+            f"{fmt(base_t_post_two_pin_after_close_yz[:3, 3])}"
+        )
     print(f"  pin approach TCP target base position m: {fmt(base_t_pin_approach[:3, 3])}")
 
     camera_points = [
@@ -1962,6 +2228,16 @@ def add_motion_plan_frames(
         camera_points.append(base_t_post_two_pin_aligned_insert[:3, 3])
     if base_t_post_two_pin_release_retreat is not None:
         camera_points.append(base_t_post_two_pin_release_retreat[:3, 3])
+    if base_t_post_two_pin_release_shift_z is not None:
+        camera_points.append(base_t_post_two_pin_release_shift_z[:3, 3])
+    if base_t_post_two_pin_release_final_y is not None:
+        camera_points.append(base_t_post_two_pin_release_final_y[:3, 3])
+    if base_t_post_two_pin_release_rotate_x is not None:
+        camera_points.append(base_t_post_two_pin_release_rotate_x[:3, 3])
+    if base_t_post_two_pin_after_close_y is not None:
+        camera_points.append(base_t_post_two_pin_after_close_y[:3, 3])
+    if base_t_post_two_pin_after_close_yz is not None:
+        camera_points.append(base_t_post_two_pin_after_close_yz[:3, 3])
     return np.vstack(camera_points)
 
 
@@ -2114,6 +2390,11 @@ def build_motion_trajectory(
     post_two_pin_close_image_alignment_metadata = None
     post_two_pin_aligned_insert_pose = None
     post_two_pin_release_retreat_pose = None
+    post_two_pin_release_shift_z_pose = None
+    post_two_pin_release_final_y_pose = None
+    post_two_pin_release_rotate_x_pose = None
+    post_two_pin_after_close_y_pose = None
+    post_two_pin_after_close_yz_pose = None
     if insertion_pose is not None and motion_args.post_insert_release_retreat:
         (
             post_insert_retreat_y_pose,
@@ -2157,8 +2438,18 @@ def build_motion_trajectory(
                         (
                             post_two_pin_aligned_insert_pose,
                             post_two_pin_release_retreat_pose,
+                            post_two_pin_release_shift_z_pose,
+                            post_two_pin_release_final_y_pose,
+                            post_two_pin_release_rotate_x_pose,
                         ) = motion.post_two_pin_aligned_insert_release_target_poses(
                             post_two_pin_close_image_correction_pose,
+                            motion_args,
+                        )
+                        (
+                            (_, post_two_pin_after_close_y_pose),
+                            (_, post_two_pin_after_close_yz_pose),
+                        ) = motion.post_two_pin_after_close_target_poses(
+                            post_two_pin_release_rotate_x_pose,
                             motion_args,
                         )
 
@@ -2196,6 +2487,16 @@ def build_motion_trajectory(
         planned_poses.append(("post-two-pin aligned TCP -Y insertion", post_two_pin_aligned_insert_pose))
     if post_two_pin_release_retreat_pose is not None:
         planned_poses.append(("post-two-pin release TCP +Y retreat", post_two_pin_release_retreat_pose))
+    if post_two_pin_release_shift_z_pose is not None:
+        planned_poses.append(("post-two-pin release TCP Z shift", post_two_pin_release_shift_z_pose))
+    if post_two_pin_release_final_y_pose is not None:
+        planned_poses.append(("post-two-pin release TCP final X/Y shift", post_two_pin_release_final_y_pose))
+    if post_two_pin_release_rotate_x_pose is not None:
+        planned_poses.append(("post-two-pin release TCP final X rotation", post_two_pin_release_rotate_x_pose))
+    if post_two_pin_after_close_y_pose is not None:
+        planned_poses.append(("post-two-pin after-close TCP Y shift", post_two_pin_after_close_y_pose))
+    if post_two_pin_after_close_yz_pose is not None:
+        planned_poses.append(("post-two-pin after-close TCP Y/Z shift", post_two_pin_after_close_yz_pose))
     for name, pose in planned_poses:
         if not rtde_control.getInverseKinematicsHasSolution(
             pose.tolist(),
@@ -2261,6 +2562,31 @@ def build_motion_trajectory(
     base_t_post_two_pin_release_retreat = (
         ur_pose_to_transform(post_two_pin_release_retreat_pose)
         if post_two_pin_release_retreat_pose is not None
+        else None
+    )
+    base_t_post_two_pin_release_shift_z = (
+        ur_pose_to_transform(post_two_pin_release_shift_z_pose)
+        if post_two_pin_release_shift_z_pose is not None
+        else None
+    )
+    base_t_post_two_pin_release_final_y = (
+        ur_pose_to_transform(post_two_pin_release_final_y_pose)
+        if post_two_pin_release_final_y_pose is not None
+        else None
+    )
+    base_t_post_two_pin_release_rotate_x = (
+        ur_pose_to_transform(post_two_pin_release_rotate_x_pose)
+        if post_two_pin_release_rotate_x_pose is not None
+        else None
+    )
+    base_t_post_two_pin_after_close_y = (
+        ur_pose_to_transform(post_two_pin_after_close_y_pose)
+        if post_two_pin_after_close_y_pose is not None
+        else None
+    )
+    base_t_post_two_pin_after_close_yz = (
+        ur_pose_to_transform(post_two_pin_after_close_yz_pose)
+        if post_two_pin_after_close_yz_pose is not None
         else None
     )
 
@@ -2373,6 +2699,56 @@ def build_motion_trajectory(
                 (80, 80, 80),
             )
         )
+        stage_start = base_t_post_two_pin_release_retreat
+    if base_t_post_two_pin_release_shift_z is not None:
+        stages.append(
+            (
+                "post_two_pin_release_shift_z",
+                stage_start,
+                base_t_post_two_pin_release_shift_z,
+                (90, 90, 90),
+            )
+        )
+        stage_start = base_t_post_two_pin_release_shift_z
+    if base_t_post_two_pin_release_final_y is not None:
+        stages.append(
+            (
+                "post_two_pin_release_final_y",
+                stage_start,
+                base_t_post_two_pin_release_final_y,
+                (70, 70, 70),
+            )
+        )
+        stage_start = base_t_post_two_pin_release_final_y
+    if base_t_post_two_pin_release_rotate_x is not None:
+        stages.append(
+            (
+                "post_two_pin_release_rotate_x",
+                stage_start,
+                base_t_post_two_pin_release_rotate_x,
+                (120, 120, 120),
+            )
+        )
+        stage_start = base_t_post_two_pin_release_rotate_x
+    if base_t_post_two_pin_after_close_y is not None:
+        stages.append(
+            (
+                "post_two_pin_after_close_y_shift",
+                stage_start,
+                base_t_post_two_pin_after_close_y,
+                (80, 120, 120),
+            )
+        )
+        stage_start = base_t_post_two_pin_after_close_y
+    if base_t_post_two_pin_after_close_yz is not None:
+        stages.append(
+            (
+                "post_two_pin_after_close_yz_shift",
+                stage_start,
+                base_t_post_two_pin_after_close_yz,
+                (60, 120, 160),
+            )
+        )
 
     stage_samples: list[tuple[str, list[np.ndarray], tuple[int, int, int]]] = []
     tcp_samples: list[np.ndarray] = []
@@ -2393,6 +2769,11 @@ def build_motion_trajectory(
             "post_two_pin_close_image_alignment",
             "post_two_pin_aligned_insert",
             "post_two_pin_release_retreat",
+            "post_two_pin_release_shift_z",
+            "post_two_pin_release_final_y",
+            "post_two_pin_release_rotate_x",
+            "post_two_pin_after_close_y_shift",
+            "post_two_pin_after_close_yz_shift",
         }:
             continue
         grasped_samples.extend(samples if not grasped_samples else samples[1:])
@@ -2433,6 +2814,11 @@ def build_motion_trajectory(
         "base_t_post_two_pin_close_image_correction": base_t_post_two_pin_close_image_correction,
         "base_t_post_two_pin_aligned_insert": base_t_post_two_pin_aligned_insert,
         "base_t_post_two_pin_release_retreat": base_t_post_two_pin_release_retreat,
+        "base_t_post_two_pin_release_shift_z": base_t_post_two_pin_release_shift_z,
+        "base_t_post_two_pin_release_final_y": base_t_post_two_pin_release_final_y,
+        "base_t_post_two_pin_release_rotate_x": base_t_post_two_pin_release_rotate_x,
+        "base_t_post_two_pin_after_close_y": base_t_post_two_pin_after_close_y,
+        "base_t_post_two_pin_after_close_yz": base_t_post_two_pin_after_close_yz,
         "rotation_approach_vector": safe_plan["rotation_approach_vector_m"],
         "pin_centering_vector": pin_centering_vector,
         "pin_approach_vector": pin_approach_vector,
@@ -2562,6 +2948,41 @@ def add_motion_trajectory(
             (
                 "15_post_two_pin_release_retreat",
                 plan["base_t_post_two_pin_release_retreat"],
+            )
+        )
+    if plan["base_t_post_two_pin_release_shift_z"] is not None:
+        endpoint_frames.append(
+            (
+                "16_post_two_pin_release_shift_z",
+                plan["base_t_post_two_pin_release_shift_z"],
+            )
+        )
+    if plan["base_t_post_two_pin_release_final_y"] is not None:
+        endpoint_frames.append(
+            (
+                "17_post_two_pin_release_final_y",
+                plan["base_t_post_two_pin_release_final_y"],
+            )
+        )
+    if plan["base_t_post_two_pin_release_rotate_x"] is not None:
+        endpoint_frames.append(
+            (
+                "18_post_two_pin_release_rotate_x",
+                plan["base_t_post_two_pin_release_rotate_x"],
+            )
+        )
+    if plan["base_t_post_two_pin_after_close_y"] is not None:
+        endpoint_frames.append(
+            (
+                "19_post_two_pin_after_close_y",
+                plan["base_t_post_two_pin_after_close_y"],
+            )
+        )
+    if plan["base_t_post_two_pin_after_close_yz"] is not None:
+        endpoint_frames.append(
+            (
+                "20_post_two_pin_after_close_yz",
+                plan["base_t_post_two_pin_after_close_yz"],
             )
         )
     for name, transform in endpoint_frames:
@@ -2694,6 +3115,33 @@ def add_motion_trajectory(
             "  post-two-pin release TCP local +Y retreat mm: "
             f"{args.post_two_pin_release_retreat_y_mm:.3f}"
         )
+    if plan["base_t_post_two_pin_release_shift_z"] is not None:
+        print(
+            "  post-two-pin release TCP local Z shift mm: "
+            f"{args.post_two_pin_release_shift_z_mm:.3f}"
+        )
+    if plan["base_t_post_two_pin_release_final_y"] is not None:
+        print(
+            "  post-two-pin release TCP local final X/Y shift mm: "
+            f"{args.post_two_pin_release_final_x_mm:.3f}/"
+            f"{args.post_two_pin_release_final_y_mm:.3f}"
+        )
+    if plan["base_t_post_two_pin_release_rotate_x"] is not None:
+        print(
+            "  post-two-pin release TCP local X rotation deg: "
+            f"{args.post_two_pin_release_rotate_x_deg:.3f}"
+        )
+    if plan["base_t_post_two_pin_after_close_y"] is not None:
+        print(
+            "  post-two-pin after-close TCP local Y shift mm: "
+            f"{args.post_two_pin_after_close_y_mm:.3f}"
+        )
+    if plan["base_t_post_two_pin_after_close_yz"] is not None:
+        print(
+            "  post-two-pin after-close TCP local final Y/Z shift mm: "
+            f"{args.post_two_pin_after_close_final_y_mm:.3f}/"
+            f"{args.post_two_pin_after_close_final_z_mm:.3f}"
+        )
     print(
         "  pin centering target tray reference in pin frame mm: "
         f"{fmt(1000.0 * pin_centering_reference_in_pin, decimals=3)}"
@@ -2748,6 +3196,31 @@ def add_motion_trajectory(
                         *(
                             [plan["base_t_post_two_pin_release_retreat"][:3, 3]]
                             if plan["base_t_post_two_pin_release_retreat"] is not None
+                            else []
+                        ),
+                        *(
+                            [plan["base_t_post_two_pin_release_shift_z"][:3, 3]]
+                            if plan["base_t_post_two_pin_release_shift_z"] is not None
+                            else []
+                        ),
+                        *(
+                            [plan["base_t_post_two_pin_release_final_y"][:3, 3]]
+                            if plan["base_t_post_two_pin_release_final_y"] is not None
+                            else []
+                        ),
+                        *(
+                            [plan["base_t_post_two_pin_release_rotate_x"][:3, 3]]
+                            if plan["base_t_post_two_pin_release_rotate_x"] is not None
+                            else []
+                        ),
+                        *(
+                            [plan["base_t_post_two_pin_after_close_y"][:3, 3]]
+                            if plan["base_t_post_two_pin_after_close_y"] is not None
+                            else []
+                        ),
+                        *(
+                            [plan["base_t_post_two_pin_after_close_yz"][:3, 3]]
+                            if plan["base_t_post_two_pin_after_close_yz"] is not None
                             else []
                         ),
                     ],

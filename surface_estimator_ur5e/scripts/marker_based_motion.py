@@ -51,8 +51,8 @@ DEFAULT_HEIGHT_ABOVE_MARKER_MM = 15.0
 BASE_Z_DOWN = np.array([0.0, 0.0, 1.0], dtype=float)
 DEFAULT_TCP_OFFSET_UR = [0.0, 0.0, 0.158, -1.5707, 0.0, 0.0]
 DEFAULT_INITIAL_Q_DEG = [44.85, -15.96, -81.60, 7.72, 89.63, 135.01]
-DEFAULT_SPEED_M_S = 0.02
-DEFAULT_ACCELERATION_M_S2 = 0.04
+DEFAULT_SPEED_M_S = 0.03
+DEFAULT_ACCELERATION_M_S2 = 0.06
 DEFAULT_POST_GRASP_LIFT_MM = 15.0
 DEFAULT_SAFE_FLOOR_CLEARANCE_MM = 15.0
 DEFAULT_MAX_SAFETY_LIFT_MM = 80.0
@@ -83,8 +83,31 @@ DEFAULT_POST_INSERT_RETREAT_Y_MM = 50.0
 DEFAULT_POST_INSERT_TWO_PIN_TARGET_Y_MM = 19.0
 DEFAULT_POST_TWO_PIN_CLOSE_RETREAT_Y_MM = 30.0
 DEFAULT_POST_TWO_PIN_CLOSE_SHIFT_NEGATIVE_X_MM = 58.0
-DEFAULT_POST_TWO_PIN_ALIGNED_INSERT_Y_MM = 20.0
-DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM = 30.0
+DEFAULT_POST_TWO_PIN_ALIGNED_INSERT_Y_MM = 17.0
+DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM = 150.0
+DEFAULT_POST_TWO_PIN_RELEASE_SHIFT_Z_MM = -170.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_X_MM = 20.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_Y_MM = -170.0
+DEFAULT_POST_TWO_PIN_RELEASE_ROTATE_X_DEG = -88.0
+DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_FIRST_Y_MM = -40.0
+DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_FIRST_Z_MM = 10.0
+DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Z_MM = 40.0
+DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Y_MM = 10.0
+DEFAULT_POST_TWO_PIN_RELEASE_FINAL_CLOSE_PERCENT = 50.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_PRE_Y_MM = -3.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_PRE_Z_MM = 20.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_Y_MM = -10.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Y_MM = 0.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Z_MM = 15.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_ROTATE_X_DEG = -5.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_Y_MM = -60.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_Z_MM = 15.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_ROTATE_X_DEG = 30.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Y_MM = -35.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Z_MM = -2.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_EXTRA_FIRST_Z_MM = 5.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_EXTRA_Y_MM = -5.0
+DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_EXTRA_FINAL_Z_MM = -10.0
 DEFAULT_PIN_IMAGE_SERIAL = "261322073147"
 DEFAULT_PIN_IMAGE_WIDTH = 1280
 DEFAULT_PIN_IMAGE_HEIGHT = 720
@@ -100,7 +123,7 @@ DEFAULT_AUTO_PIN_IMAGE_SETTLE_S = 0.2
 DEFAULT_INITIAL_SPEED_RAD_S = 0.05
 DEFAULT_INITIAL_ACCELERATION_RAD_S2 = 0.05
 DEFAULT_INITIAL_DWELL_S = 0.5
-POST_GRASP_DWELL_S = 3.0
+POST_GRASP_DWELL_S = 1.5
 POST_TWO_PIN_CLOSE_DWELL_S = 3.0
 ROTATION_LIFT_CANDIDATES_MM = (0.0, 30.0, 50.0, 70.0)
 LIFT_WAYPOINT_STEP_MM = 10.0
@@ -312,6 +335,40 @@ def parse_args() -> argparse.Namespace:
             "run only the pin approach, optional image correction, and optional insertion "
             "from the current TCP pose."
         ),
+    )
+    parser.add_argument(
+        "--continue-post-two-pin-release-from-current",
+        action="store_true",
+        help=(
+            "Resume only the final post-two-pin release motion from the current TCP pose. "
+            "This sends TCP-local Z, TCP-local X/Y, TCP-local X rotation, then closes "
+            "the gripper; it does not run marker grasp, pin approach, image alignment, "
+            "or insertion."
+        ),
+    )
+    parser.add_argument(
+        "--continue-post-two-pin-after-close-from-current",
+        action="store_true",
+        help=(
+            "Resume only the post-two-pin after-close motion from the current TCP pose. "
+            "This sends TCP-local Y, then a combined TCP-local Y/Z move; it does not run "
+            "marker grasp, pin approach, image alignment, insertion, or gripper commands."
+        ),
+    )
+    parser.add_argument(
+        "--continue-post-two-pin-tail-from-current",
+        action="store_true",
+        help="Resume only the final TCP-local Y tail move from the current TCP pose.",
+    )
+    parser.add_argument(
+        "--continue-post-two-pin-tail-next-from-current",
+        action="store_true",
+        help="Resume only the TCP-local Y/Z move after the final tail from the current TCP pose.",
+    )
+    parser.add_argument(
+        "--continue-post-two-pin-tail-extra-from-current",
+        action="store_true",
+        help="Resume only the extra TCP-local Z, Y, Z moves after tail-next from the current TCP pose.",
     )
     parser.add_argument(
         "--pin-approach-clearance-mm",
@@ -565,7 +622,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "After final post-close image alignment, move TCP local -Y, fully open "
-            "the gripper, then retreat TCP local +Y. This is the default."
+            "the gripper, retreat TCP local +Y, then move TCP local Z and Y. This is the default."
         ),
     )
     parser.add_argument(
@@ -588,6 +645,68 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=DEFAULT_POST_TWO_PIN_RELEASE_RETREAT_Y_MM,
         help="TCP-local +Y retreat after fully opening the gripper at the final aligned insertion.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-shift-z-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_SHIFT_Z_MM,
+        help="TCP-local Z move after the final +Y release retreat. Negative moves along TCP local -Z.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_Y_MM,
+        help="TCP-local Y move after the final release Z shift. Negative moves along TCP local -Y.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-x-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_X_MM,
+        help="TCP-local X move sent together with the final release Y move.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-rotate-x-deg",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_ROTATE_X_DEG,
+        help="TCP-local X-axis rotation after the final release X/Y translation.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-after-rotation-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Y_MM,
+        help="TCP-local Y move immediately after the final release X-axis rotation.",
+    )
+    parser.add_argument(
+        "--post-two-pin-release-final-close-percent",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_RELEASE_FINAL_CLOSE_PERCENT,
+        help="Gripper close percent after the final release X-axis rotation.",
+    )
+    parser.add_argument(
+        "--stop-after-post-two-pin-release-rotation",
+        action="store_true",
+        help=(
+            "Stop immediately after the final TCP-local X-axis rotation. "
+            "This skips the final gripper close and post-close Y/Z moves."
+        ),
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_Y_MM,
+        help="TCP-local Y move after the final post-two-pin gripper close.",
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-final-y-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Y_MM,
+        help="TCP-local Y move sent together with the final after-close Z move.",
+    )
+    parser.add_argument(
+        "--post-two-pin-after-close-final-z-mm",
+        type=float,
+        default=DEFAULT_POST_TWO_PIN_AFTER_CLOSE_FINAL_Z_MM,
+        help="TCP-local Z move sent together with the final after-close Y move.",
     )
     parser.add_argument("--tray-obj", type=Path, default=DEFAULT_VIRTUAL_TRAY_OBJ)
     parser.add_argument(
@@ -841,6 +960,15 @@ def validate_args(args: argparse.Namespace) -> None:
         args.post_two_pin_close_shift_negative_x_mm,
         args.post_two_pin_aligned_insert_y_mm,
         args.post_two_pin_release_retreat_y_mm,
+        args.post_two_pin_release_shift_z_mm,
+        args.post_two_pin_release_final_x_mm,
+        args.post_two_pin_release_final_y_mm,
+        args.post_two_pin_release_rotate_x_deg,
+        args.post_two_pin_release_after_rotation_y_mm,
+        args.post_two_pin_release_final_close_percent,
+        args.post_two_pin_after_close_y_mm,
+        args.post_two_pin_after_close_final_y_mm,
+        args.post_two_pin_after_close_final_z_mm,
         args.tray_center_tcp_z_mm,
         args.tray_local_rx_deg,
         args.tray_handle_root_y_mm,
@@ -961,6 +1089,8 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--post-two-pin-aligned-insert-y-mm must be non-negative.")
     if args.post_two_pin_release_retreat_y_mm < 0.0:
         raise ValueError("--post-two-pin-release-retreat-y-mm must be non-negative.")
+    if not 0.0 <= args.post_two_pin_release_final_close_percent <= 100.0:
+        raise ValueError("--post-two-pin-release-final-close-percent must be between 0 and 100.")
     if not 0.0 < args.tray_handle_scale <= 1.0:
         raise ValueError("--tray-handle-scale must be > 0 and <= 1.")
     if not 0.0 <= args.gripper_close_percent <= 100.0:
@@ -1120,6 +1250,18 @@ def pose_translated_in_tcp_frame(current_tcp_pose_ur: np.ndarray, offset_tcp_m: 
     pose = np.asarray(current_tcp_pose_ur, dtype=float).copy()
     rotation = Rotation.from_rotvec(pose[3:6]).as_matrix()
     pose[:3] += rotation @ np.asarray(offset_tcp_m, dtype=float)
+    return pose
+
+
+def pose_rotated_in_tcp_frame(
+    current_tcp_pose_ur: np.ndarray,
+    axis: str,
+    angle_deg: float,
+) -> np.ndarray:
+    pose = np.asarray(current_tcp_pose_ur, dtype=float).copy()
+    current_rotation = Rotation.from_rotvec(pose[3:6])
+    local_rotation = Rotation.from_euler(axis, float(angle_deg), degrees=True)
+    pose[3:6] = (current_rotation * local_rotation).as_rotvec()
     return pose
 
 
@@ -1414,7 +1556,7 @@ def print_post_two_pin_close_image_alignment_plan(
 def post_two_pin_aligned_insert_release_target_poses(
     start_tcp_pose_ur: np.ndarray,
     args: argparse.Namespace,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     insert_pose = pose_translated_in_tcp_frame(
         start_tcp_pose_ur,
         np.asarray([0.0, -args.post_two_pin_aligned_insert_y_mm / 1000.0, 0.0], dtype=float),
@@ -1423,7 +1565,27 @@ def post_two_pin_aligned_insert_release_target_poses(
         insert_pose,
         np.asarray([0.0, args.post_two_pin_release_retreat_y_mm / 1000.0, 0.0], dtype=float),
     )
-    return insert_pose, release_retreat_pose
+    release_shift_z_pose = pose_translated_in_tcp_frame(
+        release_retreat_pose,
+        np.asarray([0.0, 0.0, args.post_two_pin_release_shift_z_mm / 1000.0], dtype=float),
+    )
+    release_final_xy_pose = pose_translated_in_tcp_frame(
+        release_shift_z_pose,
+        np.asarray(
+            [
+                args.post_two_pin_release_final_x_mm / 1000.0,
+                args.post_two_pin_release_final_y_mm / 1000.0,
+                0.0,
+            ],
+            dtype=float,
+        ),
+    )
+    release_rotate_x_pose = pose_rotated_in_tcp_frame(
+        release_final_xy_pose,
+        "x",
+        args.post_two_pin_release_rotate_x_deg,
+    )
+    return insert_pose, release_retreat_pose, release_shift_z_pose, release_final_xy_pose, release_rotate_x_pose
 
 
 def print_post_two_pin_aligned_insert_release_plan(
@@ -1434,12 +1596,22 @@ def print_post_two_pin_aligned_insert_release_plan(
         print("Post-two-pin aligned insert/release: disabled.")
         return []
 
-    insert_pose, release_retreat_pose = post_two_pin_aligned_insert_release_target_poses(
+    (
+        insert_pose,
+        release_retreat_pose,
+        release_shift_z_pose,
+        release_final_xy_pose,
+        release_rotate_x_pose,
+    ) = post_two_pin_aligned_insert_release_target_poses(
         start_tcp_pose_ur,
         args,
     )
     print("Post-two-pin aligned insert/release:")
-    print("  sequence: TCP local -Y insertion -> fully open gripper -> TCP local +Y retreat")
+    print(
+        "  sequence: TCP local -Y insertion -> fully open gripper -> "
+        "TCP local +Y retreat -> TCP local Z shift -> TCP local X/Y shift -> "
+        "TCP local X rotation -> half-close gripper"
+    )
     print(f"  TCP local -Y insertion mm: {args.post_two_pin_aligned_insert_y_mm:.3f}")
     print(
         "  insertion speed/acceleration: "
@@ -1447,12 +1619,194 @@ def print_post_two_pin_aligned_insert_release_plan(
         f"{args.pin_insertion_acceleration_m_s2:.4f} m/s^2"
     )
     print(f"  TCP local +Y release retreat mm: {args.post_two_pin_release_retreat_y_mm:.3f}")
+    print(f"  TCP local Z release shift mm: {args.post_two_pin_release_shift_z_mm:.3f}")
+    print(f"  TCP local final X release shift mm: {args.post_two_pin_release_final_x_mm:.3f}")
+    print(f"  TCP local final Y release shift mm: {args.post_two_pin_release_final_y_mm:.3f}")
+    print(f"  TCP local final X rotation deg: {args.post_two_pin_release_rotate_x_deg:.3f}")
+    print(f"  final gripper close percent: {args.post_two_pin_release_final_close_percent:.1f}")
     print(f"  aligned_insert_tcp_pose_ur: {fmt(insert_pose)}")
     print(f"  release_retreat_tcp_pose_ur: {fmt(release_retreat_pose)}")
+    print(f"  release_shift_z_tcp_pose_ur: {fmt(release_shift_z_pose)}")
+    print(f"  release_final_xy_tcp_pose_ur: {fmt(release_final_xy_pose)}")
+    print(f"  release_rotate_x_tcp_pose_ur: {fmt(release_rotate_x_pose)}")
     return [
         ("post-two-pin aligned TCP -Y insertion", insert_pose),
         ("post-two-pin release TCP +Y retreat", release_retreat_pose),
+        ("post-two-pin release TCP Z shift", release_shift_z_pose),
+        ("post-two-pin release TCP final X/Y shift", release_final_xy_pose),
+        ("post-two-pin release TCP final X rotation", release_rotate_x_pose),
     ]
+
+
+def post_two_pin_release_after_rotation_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    y_shift_pose = pose_translated_in_tcp_frame(
+        start_tcp_pose_ur,
+        np.asarray(
+            [0.0, DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_FIRST_Y_MM / 1000.0, 0.0],
+            dtype=float,
+        ),
+    )
+    z_shift_pose = pose_translated_in_tcp_frame(
+        y_shift_pose,
+        np.asarray(
+            [
+                0.0,
+                0.0,
+                DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_FIRST_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    return [
+        ("post-two-pin release after-rotation TCP Y shift", y_shift_pose),
+        ("post-two-pin release after-rotation TCP Z shift", z_shift_pose),
+    ]
+
+
+def print_post_two_pin_release_after_rotation_plan(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    targets = post_two_pin_release_after_rotation_target_poses(start_tcp_pose_ur, args)
+    print("Post-two-pin release after-rotation motion:")
+    print(f"  start_tcp_pose_ur: {fmt(start_tcp_pose_ur)}")
+    print(
+        "  TCP local Y shift after rotation mm: "
+        f"{args.post_two_pin_release_after_rotation_y_mm:.3f}"
+    )
+    for name, pose in targets:
+        print(f"  {name}_pose_ur: {fmt(pose)}")
+    return targets
+
+
+def post_two_pin_after_close_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    pre_yz_shift_pose = pose_translated_in_tcp_frame(
+        start_tcp_pose_ur,
+        np.asarray(
+            [
+                0.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_PRE_Y_MM / 1000.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_PRE_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    yz_shift_pose = pose_translated_in_tcp_frame(
+        pre_yz_shift_pose,
+        np.asarray(
+            [
+                0.0,
+                args.post_two_pin_after_close_y_mm / 1000.0,
+                args.post_two_pin_after_close_final_z_mm / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    rotate_x_pose = pose_rotated_in_tcp_frame(
+        yz_shift_pose,
+        "x",
+        DEFAULT_POST_TWO_PIN_AFTER_CLOSE_ROTATE_X_DEG,
+    )
+    return [
+        ("post-two-pin after-close pre-final TCP Y/Z shift", pre_yz_shift_pose),
+        ("post-two-pin after-close TCP Y/Z shift", yz_shift_pose),
+        ("post-two-pin after-close TCP X rotation", rotate_x_pose),
+    ]
+
+
+def print_post_two_pin_after_close_plan(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    targets = post_two_pin_after_close_target_poses(start_tcp_pose_ur, args)
+    print("Post-two-pin after-close motion:")
+    print(f"  start_tcp_pose_ur: {fmt(start_tcp_pose_ur)}")
+    print(f"  TCP local Y shift mm: {args.post_two_pin_after_close_y_mm:.3f}")
+    print(
+        "  TCP local final Y/Z shift mm: "
+        f"{args.post_two_pin_after_close_final_y_mm:.3f}/"
+        f"{args.post_two_pin_after_close_final_z_mm:.3f}"
+    )
+    for name, pose in targets:
+        print(f"  {name}_pose_ur: {fmt(pose)}")
+    return targets
+
+
+def post_two_pin_after_close_tail_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    tail_pose = pose_translated_in_tcp_frame(
+        start_tcp_pose_ur,
+        np.asarray(
+            [
+                0.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_Y_MM / 1000.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    rotate_pose = pose_rotated_in_tcp_frame(
+        tail_pose,
+        "x",
+        DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_ROTATE_X_DEG,
+    )
+    next_pose = pose_translated_in_tcp_frame(
+        rotate_pose,
+        np.asarray(
+            [
+                0.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Y_MM / 1000.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    return [
+        ("post-two-pin after-close tail TCP Y/Z shift", tail_pose),
+        ("post-two-pin after-close tail next TCP X rotation", rotate_pose),
+        ("post-two-pin after-close tail next TCP Y/Z shift", next_pose),
+    ]
+
+
+def post_two_pin_after_close_tail_next_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    rotate_pose = pose_rotated_in_tcp_frame(
+        start_tcp_pose_ur,
+        "x",
+        DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_ROTATE_X_DEG,
+    )
+    next_pose = pose_translated_in_tcp_frame(
+        rotate_pose,
+        np.asarray(
+            [
+                0.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Y_MM / 1000.0,
+                DEFAULT_POST_TWO_PIN_AFTER_CLOSE_TAIL_NEXT_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    return [
+        ("post-two-pin after-close tail next TCP X rotation", rotate_pose),
+        ("post-two-pin after-close tail next TCP Y/Z shift", next_pose),
+    ]
+
+
+def post_two_pin_after_close_tail_extra_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    return []
 
 
 def pin_insertion_target_pose(
@@ -2753,10 +3107,15 @@ def close_gripper_after_delay(args: argparse.Namespace) -> None:
         gripper.close()
 
 
-def close_gripper_now(args: argparse.Namespace, command_name: str = "gripper_close") -> None:
+def close_gripper_now(
+    args: argparse.Namespace,
+    command_name: str = "gripper_close",
+    position_percent: float | None = None,
+) -> None:
+    close_percent = args.gripper_close_percent if position_percent is None else float(position_percent)
     command = GripperCommand(
         name=command_name,
-        position_percent=args.gripper_close_percent,
+        position_percent=close_percent,
         speed=args.gripper_speed,
         force=args.gripper_force,
         wait=True,
@@ -2770,7 +3129,7 @@ def close_gripper_now(args: argparse.Namespace, command_name: str = "gripper_clo
         print(f"gripper raw position before close: {start_position} (0=open, 255=closed)")
         print(
             "Closing gripper: "
-            f"{args.gripper_close_percent:.1f}% closed, "
+            f"{close_percent:.1f}% closed, "
             f"speed={args.gripper_speed}, force={args.gripper_force}"
         )
         gripper.move_to_percent(command)
@@ -2861,6 +3220,12 @@ def execute_post_insert_release_retreat(
             post_aligned_start_pose,
             args,
         )
+    post_release_after_rotation_targets: list[tuple[str, np.ndarray]] = []
+    if post_aligned_insert_release_targets and not args.stop_after_post_two_pin_release_rotation:
+        post_release_after_rotation_targets = print_post_two_pin_release_after_rotation_plan(
+            post_aligned_insert_release_targets[-1][1],
+            args,
+        )
     q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
     for name, pose in [*post_insert_targets, *post_close_targets]:
         q_near = require_ik_solution(rtde_control, q_near, pose, name)
@@ -2872,6 +3237,8 @@ def execute_post_insert_release_retreat(
             "post-two-pin-close image alignment correction",
         )
     for name, pose in post_aligned_insert_release_targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    for name, pose in post_release_after_rotation_targets:
         q_near = require_ik_solution(rtde_control, q_near, pose, name)
 
     open_gripper_fully(args)
@@ -2938,8 +3305,10 @@ def execute_post_insert_release_retreat(
                 q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
                 for name, pose in post_aligned_insert_release_targets:
                     q_near = require_ik_solution(rtde_control, q_near, pose, name)
-                if len(post_aligned_insert_release_targets) != 2:
-                    raise RuntimeError("Expected final aligned insert and release-retreat targets.")
+                if len(post_aligned_insert_release_targets) != 5:
+                    raise RuntimeError(
+                        "Expected final aligned insert, release-retreat, Z-shift, final X/Y-shift, and X-rotation targets."
+                    )
                 insert_name, insert_pose = post_aligned_insert_release_targets[0]
                 execute_continuous_movel(
                     rtde_receive,
@@ -2963,6 +3332,340 @@ def execute_post_insert_release_retreat(
                     args,
                     motion_name=retreat_name,
                 )
+                shift_z_name, shift_z_pose = post_aligned_insert_release_targets[2]
+                execute_continuous_movel(
+                    rtde_receive,
+                    rtde_control,
+                    shift_z_pose,
+                    args,
+                    motion_name=shift_z_name,
+                )
+                final_xy_name, final_xy_pose = post_aligned_insert_release_targets[3]
+                execute_continuous_movel(
+                    rtde_receive,
+                    rtde_control,
+                    final_xy_pose,
+                    args,
+                    motion_name=final_xy_name,
+                )
+                rotate_x_name, rotate_x_pose = post_aligned_insert_release_targets[4]
+                execute_continuous_movel(
+                    rtde_receive,
+                    rtde_control,
+                    rotate_x_pose,
+                    args,
+                    motion_name=rotate_x_name,
+                )
+                if args.stop_after_post_two_pin_release_rotation:
+                    print("Stopping after final post-two-pin TCP local X rotation as requested.")
+                    return
+                current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+                after_rotation_targets = print_post_two_pin_release_after_rotation_plan(
+                    current_pose_ur,
+                    args,
+                )
+                q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+                for name, pose in after_rotation_targets:
+                    q_near = require_ik_solution(rtde_control, q_near, pose, name)
+                for name, pose in after_rotation_targets:
+                    execute_continuous_movel(
+                        rtde_receive,
+                        rtde_control,
+                        pose,
+                        args,
+                        motion_name=name,
+                        speed_m_s=args.pin_insertion_speed_m_s,
+                        acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+                    )
+                close_gripper_now(
+                    args,
+                    command_name="post_two_pin_release_final_half_close",
+                    position_percent=args.post_two_pin_release_final_close_percent,
+                )
+                current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+                post_close_yz_pose = pose_translated_in_tcp_frame(
+                    current_pose_ur,
+                    np.asarray(
+                        [
+                            0.0,
+                            args.post_two_pin_release_after_rotation_y_mm / 1000.0,
+                            DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Z_MM / 1000.0,
+                        ],
+                        dtype=float,
+                    ),
+                )
+                require_ik_solution(
+                    rtde_control,
+                    np.asarray(rtde_receive.getActualQ(), dtype=float),
+                    post_close_yz_pose,
+                    "post-two-pin after-close TCP Y/Z shift",
+                )
+                execute_continuous_movel(
+                    rtde_receive,
+                    rtde_control,
+                    post_close_yz_pose,
+                    args,
+                    motion_name="post-two-pin after-close TCP Y/Z shift",
+                    speed_m_s=args.pin_insertion_speed_m_s,
+                    acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+                )
+                current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+                extra_targets = print_post_two_pin_after_close_plan(current_pose_ur, args)
+                q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+                for name, pose in extra_targets:
+                    q_near = require_ik_solution(rtde_control, q_near, pose, name)
+                for name, pose in extra_targets:
+                    execute_continuous_movel(
+                        rtde_receive,
+                        rtde_control,
+                        pose,
+                        args,
+                        motion_name=name,
+                        speed_m_s=args.pin_insertion_speed_m_s,
+                        acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+                    )
+                current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+                tail_targets = post_two_pin_after_close_tail_target_poses(current_pose_ur, args)
+                q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+                for name, pose in tail_targets:
+                    q_near = require_ik_solution(rtde_control, q_near, pose, name)
+                for name, pose in tail_targets:
+                    execute_continuous_movel(
+                        rtde_receive,
+                        rtde_control,
+                        pose,
+                        args,
+                        motion_name=name,
+                        speed_m_s=args.pin_insertion_speed_m_s,
+                        acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+                    )
+
+
+def post_two_pin_release_resume_target_poses(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    shift_z_pose = pose_translated_in_tcp_frame(
+        start_tcp_pose_ur,
+        np.asarray([0.0, 0.0, args.post_two_pin_release_shift_z_mm / 1000.0], dtype=float),
+    )
+    final_xy_pose = pose_translated_in_tcp_frame(
+        shift_z_pose,
+        np.asarray(
+            [
+                args.post_two_pin_release_final_x_mm / 1000.0,
+                args.post_two_pin_release_final_y_mm / 1000.0,
+                0.0,
+            ],
+            dtype=float,
+        ),
+    )
+    rotate_x_pose = pose_rotated_in_tcp_frame(
+        final_xy_pose,
+        "x",
+        args.post_two_pin_release_rotate_x_deg,
+    )
+    return [
+        ("resume post-two-pin release TCP Z shift", shift_z_pose),
+        ("resume post-two-pin release TCP final X/Y shift", final_xy_pose),
+        ("resume post-two-pin release TCP final X rotation", rotate_x_pose),
+    ]
+
+
+def print_post_two_pin_release_resume_plan(
+    start_tcp_pose_ur: np.ndarray,
+    args: argparse.Namespace,
+) -> list[tuple[str, np.ndarray]]:
+    targets = post_two_pin_release_resume_target_poses(start_tcp_pose_ur, args)
+    print("Resume post-two-pin release from current TCP:")
+    print(f"  current_tcp_pose_ur: {fmt(start_tcp_pose_ur)}")
+    print(f"  TCP local Z shift mm: {args.post_two_pin_release_shift_z_mm:.3f}")
+    print(f"  TCP local final X shift mm: {args.post_two_pin_release_final_x_mm:.3f}")
+    print(f"  TCP local final Y shift mm: {args.post_two_pin_release_final_y_mm:.3f}")
+    print(f"  TCP local final X rotation deg: {args.post_two_pin_release_rotate_x_deg:.3f}")
+    print(
+        "  TCP local Y shift after rotation mm: "
+        f"{args.post_two_pin_release_after_rotation_y_mm:.3f}"
+    )
+    print(f"  final gripper close percent: {args.post_two_pin_release_final_close_percent:.1f}")
+    for name, pose in targets:
+        print(f"  {name}_pose_ur: {fmt(pose)}")
+    return targets
+
+
+def execute_post_two_pin_release_resume_from_current(
+    rtde_receive: Any,
+    rtde_control: Any,
+    args: argparse.Namespace,
+) -> None:
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    targets = print_post_two_pin_release_resume_plan(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    if not args.execute:
+        print("DRY RUN ONLY: add --execute to run the current-pose release resume.")
+        return
+    for name, pose in targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
+    if args.stop_after_post_two_pin_release_rotation:
+        print("Stopping after final post-two-pin TCP local X rotation as requested.")
+        return
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    after_rotation_targets = print_post_two_pin_release_after_rotation_plan(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in after_rotation_targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    for name, pose in after_rotation_targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
+    close_gripper_now(
+        args,
+        command_name="resume_post_two_pin_release_final_half_close",
+        position_percent=args.post_two_pin_release_final_close_percent,
+    )
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    post_close_yz_pose = pose_translated_in_tcp_frame(
+        current_pose_ur,
+        np.asarray(
+            [
+                0.0,
+                args.post_two_pin_release_after_rotation_y_mm / 1000.0,
+                DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Z_MM / 1000.0,
+            ],
+            dtype=float,
+        ),
+    )
+    require_ik_solution(
+        rtde_control,
+        np.asarray(rtde_receive.getActualQ(), dtype=float),
+        post_close_yz_pose,
+        "resume post-two-pin after-close TCP Y/Z shift",
+    )
+    execute_continuous_movel(
+        rtde_receive,
+        rtde_control,
+        post_close_yz_pose,
+        args,
+        motion_name="resume post-two-pin after-close TCP Y/Z shift",
+        speed_m_s=args.pin_insertion_speed_m_s,
+        acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+    )
+
+
+def execute_post_two_pin_after_close_resume_from_current(
+    rtde_receive: Any,
+    rtde_control: Any,
+    args: argparse.Namespace,
+) -> None:
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    targets = print_post_two_pin_after_close_plan(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    if not args.execute:
+        print("DRY RUN ONLY: add --execute to run the current-pose after-close resume.")
+        return
+    for name, pose in targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
+
+
+def execute_post_two_pin_tail_resume_from_current(
+    rtde_receive: Any,
+    rtde_control: Any,
+    args: argparse.Namespace,
+) -> None:
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    targets = post_two_pin_after_close_tail_target_poses(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    if not args.execute:
+        print("DRY RUN ONLY: add --execute to run the current-pose tail resume.")
+        return
+    for name, pose in targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
+
+
+def execute_post_two_pin_tail_next_resume_from_current(
+    rtde_receive: Any,
+    rtde_control: Any,
+    args: argparse.Namespace,
+) -> None:
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    targets = post_two_pin_after_close_tail_next_target_poses(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    if not args.execute:
+        print("DRY RUN ONLY: add --execute to run the current-pose tail-next resume.")
+        return
+    for name, pose in targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
+
+
+def execute_post_two_pin_tail_extra_resume_from_current(
+    rtde_receive: Any,
+    rtde_control: Any,
+    args: argparse.Namespace,
+) -> None:
+    current_pose_ur = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
+    targets = post_two_pin_after_close_tail_extra_target_poses(current_pose_ur, args)
+    q_near = np.asarray(rtde_receive.getActualQ(), dtype=float)
+    for name, pose in targets:
+        q_near = require_ik_solution(rtde_control, q_near, pose, name)
+    if not args.execute:
+        print("DRY RUN ONLY: add --execute to run the current-pose tail-extra resume.")
+        return
+    for name, pose in targets:
+        execute_continuous_movel(
+            rtde_receive,
+            rtde_control,
+            pose,
+            args,
+            motion_name=name,
+            speed_m_s=args.pin_insertion_speed_m_s,
+            acceleration_m_s2=args.pin_insertion_acceleration_m_s2,
+        )
 
 
 def round_list(values: np.ndarray, decimals: int = 10) -> list[float]:
@@ -3002,6 +3705,46 @@ def main() -> None:
             set_tcp_offset(rtde_control, args.tcp_offset_ur)
 
         rtde_receive, current_tcp_pose_ur = read_current_tcp_pose(args.robot_ip)
+        if args.continue_post_two_pin_tail_extra_from_current:
+            execute_post_two_pin_tail_extra_resume_from_current(
+                rtde_receive,
+                rtde_control,
+                args,
+            )
+            print("Current-pose post-two-pin tail-extra resume complete.")
+            return
+        if args.continue_post_two_pin_tail_next_from_current:
+            execute_post_two_pin_tail_next_resume_from_current(
+                rtde_receive,
+                rtde_control,
+                args,
+            )
+            print("Current-pose post-two-pin tail-next resume complete.")
+            return
+        if args.continue_post_two_pin_tail_from_current:
+            execute_post_two_pin_tail_resume_from_current(
+                rtde_receive,
+                rtde_control,
+                args,
+            )
+            print("Current-pose post-two-pin tail resume complete.")
+            return
+        if args.continue_post_two_pin_after_close_from_current:
+            execute_post_two_pin_after_close_resume_from_current(
+                rtde_receive,
+                rtde_control,
+                args,
+            )
+            print("Current-pose post-two-pin after-close resume complete.")
+            return
+        if args.continue_post_two_pin_release_from_current:
+            execute_post_two_pin_release_resume_from_current(
+                rtde_receive,
+                rtde_control,
+                args,
+            )
+            print("Current-pose post-two-pin release resume complete.")
+            return
         if args.continue_pin_sequence_from_current:
             if base_t_pin is None:
                 raise RuntimeError("Four-pin frame was not computed.")
@@ -3050,9 +3793,24 @@ def main() -> None:
                             )
                             if args.post_two_pin_aligned_insert_release:
                                 print(
-                                    "  post-two-pin aligned TCP local -Y/+Y mm: "
+                                    "  post-two-pin aligned TCP local -Y/+Y/Z/finalX/finalY mm: "
                                     f"{args.post_two_pin_aligned_insert_y_mm:.3f}/"
-                                    f"{args.post_two_pin_release_retreat_y_mm:.3f}"
+                                    f"{args.post_two_pin_release_retreat_y_mm:.3f}/"
+                                    f"{args.post_two_pin_release_shift_z_mm:.3f}/"
+                                    f"{args.post_two_pin_release_final_x_mm:.3f}/"
+                                    f"{args.post_two_pin_release_final_y_mm:.3f}"
+                                )
+                                print(
+                                    "  post-two-pin release final rotate X deg / after-rotation Y mm / close percent: "
+                                    f"{args.post_two_pin_release_rotate_x_deg:.3f}/"
+                                    f"{args.post_two_pin_release_after_rotation_y_mm:.3f}/"
+                                    f"{args.post_two_pin_release_final_close_percent:.1f}"
+                                )
+                                print(
+                                    "  post-two-pin after-close TCP local Y/finalY/finalZ mm: "
+                                    f"{args.post_two_pin_after_close_y_mm:.3f}/"
+                                    f"{args.post_two_pin_after_close_final_y_mm:.3f}/"
+                                    f"{args.post_two_pin_after_close_final_z_mm:.3f}"
                                 )
             if not args.execute:
                 centering_pose, target_pose = print_pin_approach_plan(
@@ -3096,10 +3854,17 @@ def main() -> None:
                                 )
                             )
                             if planned_post_close_image_alignment_pose is not None:
-                                print_post_two_pin_aligned_insert_release_plan(
+                                planned_post_aligned_targets = print_post_two_pin_aligned_insert_release_plan(
                                     planned_post_close_image_alignment_pose,
                                     args,
                                 )
+                                if planned_post_aligned_targets and not args.stop_after_post_two_pin_release_rotation:
+                                    planned_post_after_rotation_targets = (
+                                        print_post_two_pin_release_after_rotation_plan(
+                                            planned_post_aligned_targets[-1][1],
+                                            args,
+                                        )
+                                    )
                 print("DRY RUN ONLY: add --execute to continue from current pose.")
                 return
             execute_pin_approach_after_rotation(
@@ -3110,6 +3875,12 @@ def main() -> None:
             )
             print("Current-pose pin approach/correction/insertion sequence complete.")
             return
+        if args.execute:
+            open_gripper_fully(
+                args,
+                command_name="pre_motion_open",
+                post_dwell_s=0.5,
+            )
         if args.start_from_initial_pose:
             if args.execute:
                 move_to_initial_pose(rtde_receive, rtde_control, args)
