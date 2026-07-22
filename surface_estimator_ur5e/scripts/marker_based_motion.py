@@ -135,7 +135,7 @@ IK_POSITION_TOLERANCE_M = 1e-5
 IK_ORIENTATION_TOLERANCE_RAD = 1e-5
 
 
-def parse_args() -> argparse.Namespace:
+def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Compute a UR TCP target from a saved marker pose. "
@@ -743,7 +743,11 @@ def parse_args() -> argparse.Namespace:
         help="Save the computed target pose YAML. If no path is given, uses data/markers.",
     )
     parser.add_argument("--execute", action="store_true")
-    return parser.parse_args()
+    return parser
+
+
+def parse_args() -> argparse.Namespace:
+    return build_arg_parser().parse_args()
 
 
 def load_marker_transform(path: Path) -> tuple[int | None, np.ndarray, dict[str, Any]]:

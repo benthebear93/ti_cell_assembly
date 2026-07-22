@@ -250,6 +250,56 @@ uv run python scripts/run_motion_sequence.py --execute
 
 This command sends `moveJ` commands through `RTDEControlInterface`. Keep the teach pendant/emergency stop reachable, use reduced mode if appropriate, and confirm the path is collision-free before adding `--execute`.
 
+## Preview The Full Assembly Program Offline
+
+Animate the Cartesian targets and gripper events used by
+`scripts/marker_based_motion.py` without connecting to the UR5e or Hand-E:
+
+```bash
+uv run python scripts/assembly_task.py preview-motion
+```
+
+Then open the URL printed by `viser`, normally `http://localhost:8080`. The
+preview starts from the saved initial joint pose, uses the saved marker and image
+alignment metadata, and includes marker grasp, tray lift, four-pin rotation,
+pin approach/insertion, release, adjacent two-pin motion, and the final tail
+motions. PyRoki solves every interpolated TCP pose against the same UR5e URDF
+used by the visualizer. The preview renders `assets/ti_tray_short.stl` (converted
+from millimetres to metres), extracts its four hole centers, and fits them to the
+four holder-pin axes at insertion. Its remaining pin-axis degree of freedom is
+chosen so the initial tray bottom sits on the marker plane; the resulting rigid
+TCP-to-tray attachment is kept throughout the grasp and carry. The Hand-E
+preview is rooted at `tool0` and uses lightweight envelopes of the repository's
+Hand-E meshes. These are visualization-only changes: the real motion geometry,
+RTDE path, and gripper commands are unchanged, and no RTDE or gripper socket is
+opened. The lower handle is shortened from 20 mm to 5 mm in the rendered mesh
+so it meets the saved grasp pose; override this with
+`--visual-tray-handle-scale` if needed. The STL on disk is not modified.
+
+The later two-pin sequence also renders `assets/CATHODE_PLATE_w_handle.stl`.
+Its two large holes nearest the handle start on the holder's adjacent two pins.
+The plate underside is seated on the holder support surface at the start of the
+orange pin sections. The plate attaches at `post-insert two-pin close`, follows
+the existing lift and transfer path, seats its four large holes on the four-pin
+datum, and detaches at `post-two-pin aligned open`. The small saved
+image-alignment correction is blended into the visualization after the plate has
+lifted clear of the two pins.
+
+Useful playback options:
+
+```bash
+uv run python scripts/assembly_task.py preview-motion \
+  --time-scale 6 \
+  --playback-hz 20 \
+  --no-loop
+```
+
+To preflight the complete trajectory without starting a browser server:
+
+```bash
+uv run python scripts/assembly_task.py preview-motion --plan-only
+```
+
 ## Export A MuJoCo Scene
 
 Generate a fixed MJCF scene with the ceiling-mounted UR5e, an attached Hand-E

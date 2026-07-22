@@ -942,7 +942,14 @@ def marker_relative_transform(
     return transform
 
 
-def add_ti_assembly_mesh(server: object, obj_path: Path, transform: np.ndarray) -> np.ndarray:
+def add_ti_assembly_mesh(
+    server: object,
+    obj_path: Path,
+    transform: np.ndarray,
+    *,
+    frame_scale: float = 1.0,
+    show_bounds: bool = True,
+) -> np.ndarray:
     import trimesh
 
     if not obj_path.exists():
@@ -952,12 +959,29 @@ def add_ti_assembly_mesh(server: object, obj_path: Path, transform: np.ndarray) 
     mesh.apply_transform(transform)
     scene = scene_handle(server)
     scene.add_mesh_trimesh("/ti_assembly/no_presser_cathode_tray", mesh=mesh)
-    add_frame(server, "/frames/ti_assembly_obj_origin", transform, axes_length=0.08)
-    add_point(server, "/ti_assembly/red_marked_origin", transform[:3, 3], (255, 20, 20), 0.012)
-    add_mesh_bounds(server, "/ti_assembly/bounds", mesh.bounds)
+    add_frame(
+        server,
+        "/frames/ti_assembly_obj_origin",
+        transform,
+        axes_length=0.08 * frame_scale,
+    )
+    add_point(
+        server,
+        "/ti_assembly/red_marked_origin",
+        transform[:3, 3],
+        (255, 20, 20),
+        0.012 * frame_scale,
+    )
+    if show_bounds:
+        add_mesh_bounds(server, "/ti_assembly/bounds", mesh.bounds)
     pin_frame, selected_pin_centers, adjacent_pin_centers = four_pin_feature_frame(obj_path)
     display_t_pin_frame = transform @ pin_frame
-    add_frame(server, "/frames/four_pin_center", display_t_pin_frame, axes_length=0.04)
+    add_frame(
+        server,
+        "/frames/four_pin_center",
+        display_t_pin_frame,
+        axes_length=0.04 * frame_scale,
+    )
     add_pin_center_markers(
         server,
         transform_points(transform, selected_pin_centers),

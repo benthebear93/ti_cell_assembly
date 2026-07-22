@@ -49,6 +49,14 @@ STAGES: tuple[TaskStage, ...] = (
         summary="Visualize the marker frame, holder, tray, target, and UR5e state in viser.",
     ),
     TaskStage(
+        name="preview-motion",
+        aliases=("animate", "offline-motion"),
+        module_name="preview_assembly_motion",
+        summary=(
+            "Animate the real marker-based assembly command path offline with PyRoki IK."
+        ),
+    ),
+    TaskStage(
         name="read-marker",
         aliases=("capture-marker",),
         module_name="read_aruco_marker_to_base",
@@ -132,6 +140,7 @@ def print_help() -> None:
     print()
     print("Examples:")
     print("  uv run python scripts/assembly_task.py visualize --show-holder --show-tray")
+    print("  uv run python scripts/assembly_task.py preview-motion")
     print("  uv run python scripts/assembly_task.py marker-target --save-target")
     print("  uv run python scripts/assembly_task.py holder-align --save-plan")
     print()
