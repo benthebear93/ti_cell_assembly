@@ -270,7 +270,10 @@ four holder-pin axes at insertion. Its remaining pin-axis degree of freedom is
 chosen so the initial tray bottom sits on the marker plane; the resulting rigid
 TCP-to-tray attachment is kept throughout the grasp and carry. The Hand-E
 preview is rooted at `tool0` and uses lightweight envelopes of the repository's
-Hand-E meshes. These are visualization-only changes: the real motion geometry,
+Hand-E meshes. The meter-scale
+`assets/picknik_ur5_realsense_camera_adapter_rev2.STL` is centered on the UR
+flange bolt pattern, and the Hand-E visual is shifted 7 mm along flange Z to sit
+on its upper mounting face. These are visualization-only changes: the real motion geometry,
 RTDE path, and gripper commands are unchanged, and no RTDE or gripper socket is
 opened. The lower handle is shortened from 20 mm to 5 mm in the rendered mesh
 so it meets the saved grasp pose; override this with
@@ -293,6 +296,9 @@ uv run python scripts/assembly_task.py preview-motion \
   --playback-hz 20 \
   --no-loop
 ```
+
+Use the `Motion path` checkbox in the viser controls to hide or restore the
+colored Cartesian path lines while the preview is running.
 
 To preflight the complete trajectory without starting a browser server:
 

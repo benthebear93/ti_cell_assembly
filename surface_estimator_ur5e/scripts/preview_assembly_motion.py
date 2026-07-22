@@ -40,9 +40,11 @@ EventKind = Literal["move", "gripper", "dwell"]
 TrayAction = Literal["attach", "detach"]
 DEFAULT_VISUAL_TRAY_STL = Path("assets/ti_tray_short.stl")
 DEFAULT_VISUAL_CATHODE_PLATE_STL = Path("assets/CATHODE_PLATE_w_handle.stl")
+DEFAULT_VISUAL_FLANGE_ADAPTER_STL = Path("assets/picknik_ur5_realsense_camera_adapter_rev2.STL")
 DEFAULT_VISUAL_TRAY_HANDLE_ROOT_Y_MM = -37.5
 DEFAULT_VISUAL_TRAY_HANDLE_SCALE = 0.25
 HANDE_MESH_DIR = Path("assets/robotiq_hande_description/meshes")
+FLANGE_ADAPTER_STACK_HEIGHT_M = 0.007
 HANDE_COUPLER_HEIGHT_M = 0.011
 HANDE_BODY_HEIGHT_M = 0.099
 HANDE_FINGER_OFFSET_M = 0.038
@@ -118,6 +120,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_VISUAL_CATHODE_PLATE_STL,
         help="Visualization-only handled cathode plate used by the two-pin sequence.",
+    )
+    parser.add_argument(
+        "--visual-flange-adapter-stl",
+        type=Path,
+        default=DEFAULT_VISUAL_FLANGE_ADAPTER_STL,
+        help="Visualization-only adapter mounted between the UR flange and Hand-E.",
     )
     parser.add_argument(
         "--visual-tray-handle-root-y-mm",
@@ -1244,6 +1252,29 @@ def load_preview_hande_mesh(
     return envelope
 
 
+def load_preview_flange_adapter_mesh(mesh_path: Path) -> tuple[object, Path]:
+    """Load the meter-scale flange adapter while retaining its bolt holes."""
+
+    import trimesh
+
+    resolved_path = motion.resolve_project_path(mesh_path)
+    if not resolved_path.exists():
+        raise FileNotFoundError(f"Visual flange adapter mesh not found: {resolved_path}")
+    mesh = trimesh.load(resolved_path, force="mesh", process=True)
+    if not isinstance(mesh, trimesh.Trimesh):
+        raise ValueError(f"Expected one flange adapter mesh in {resolved_path}.")
+    extents = np.asarray(mesh.extents, dtype=float)
+    if not np.all(np.isfinite(extents)) or not 0.05 < float(np.max(extents)) < 0.20:
+        raise ValueError(
+            f"Unexpected flange adapter dimensions {extents.tolist()} m in {resolved_path}."
+        )
+    mesh.visual.face_colors = np.tile(
+        np.asarray((95, 105, 115, 255), dtype=np.uint8),
+        (len(mesh.faces), 1),
+    )
+    return mesh, resolved_path
+
+
 def launch_visualization(
     args: argparse.Namespace,
     ik: PyrokiRTDEControlAdapter,
@@ -1316,10 +1347,29 @@ def launch_visualization(
         color=(30, 120, 250),
     )
 
-    first_display_t_hande = display_transform @ base_t_hande_mount(
+    first_base_t_flange_adapter = base_t_hande_mount(
         frames[0].tcp_pose_ur,
         args.tcp_offset_ur,
     )
+    first_display_t_flange_adapter = display_transform @ first_base_t_flange_adapter
+    flange_adapter_root = scene.add_frame(
+        "/animation/flange_camera_adapter",
+        position=first_display_t_flange_adapter[:3, 3],
+        wxyz=Rotation.from_matrix(first_display_t_flange_adapter[:3, :3]).as_quat()[[3, 0, 1, 2]],
+        show_axes=False,
+    )
+    flange_adapter_mesh, resolved_flange_adapter_path = load_preview_flange_adapter_mesh(
+        Path(args.visual_flange_adapter_stl)
+    )
+    scene.add_mesh_trimesh(
+        "/animation/flange_camera_adapter/mesh",
+        flange_adapter_mesh,
+    )
+
+    first_base_t_hande = first_base_t_flange_adapter @ translation_transform(
+        np.asarray([0.0, 0.0, FLANGE_ADAPTER_STACK_HEIGHT_M], dtype=float)
+    )
+    first_display_t_hande = display_transform @ first_base_t_hande
     hande_root = scene.add_frame(
         "/animation/hande",
         position=first_display_t_hande[:3, 3],
@@ -1451,7 +1501,7 @@ def launch_visualization(
             color=(255, 145, 35) if index in cathode_handle_side_indices else (180, 60, 235),
         )
 
-    add_solved_paths(scene, display_transform, frames)
+    motion_path_handles = add_solved_paths(scene, display_transform, frames)
     tcp_path_points = transform_points(
         display_transform,
         np.asarray([frame.tcp_pose_ur[:3] for frame in frames], dtype=float),
@@ -1481,6 +1531,14 @@ def launch_visualization(
 
     play = server.gui.add_checkbox("Play", initial_value=True)
     loop = server.gui.add_checkbox("Loop", initial_value=not args.no_loop)
+    show_motion_path = server.gui.add_checkbox("Motion path", initial_value=True)
+
+    @show_motion_path.on_update
+    def _toggle_motion_path(_event: object) -> None:
+        with server.atomic():
+            for path_handle in motion_path_handles:
+                path_handle.visible = bool(show_motion_path.value)
+
     speed = server.gui.add_slider(
         "Playback multiplier",
         min=0.25,
@@ -1539,6 +1597,10 @@ def launch_visualization(
         f"{cathode_plate_animation.attachment_correction_m * 1000.0:.3f} mm, "
         f"{cathode_plate_animation.attachment_correction_deg:.3f} deg."
     )
+    print(
+        f"Visual flange adapter: {resolved_flange_adapter_path}; "
+        f"Hand-E shifted +{FLANGE_ADAPTER_STACK_HEIGHT_M * 1000.0:.1f} mm along flange Z."
+    )
     print("No RTDE or gripper connection was opened. Press Ctrl+C to stop.")
 
     frame_index = 0
@@ -1553,16 +1615,24 @@ def launch_visualization(
                 list(DEFAULT_JOINT_ORDER),
             )
             display_t_tcp = display_transform @ ur_pose_to_transform(frame.tcp_pose_ur)
-            display_t_hande = display_transform @ base_t_hande_mount(
+            base_t_flange_adapter = base_t_hande_mount(
                 frame.tcp_pose_ur,
                 args.tcp_offset_ur,
             )
+            display_t_flange_adapter = display_transform @ base_t_flange_adapter
+            base_t_hande = base_t_flange_adapter @ translation_transform(
+                np.asarray([0.0, 0.0, FLANGE_ADAPTER_STACK_HEIGHT_M], dtype=float)
+            )
+            display_t_hande = display_transform @ base_t_hande
             display_t_tray = display_transform @ tray_transforms[frame_index]
             display_t_cathode_plate = (
                 display_transform @ cathode_plate_animation.transforms[frame_index]
             )
             tcp_wxyz = Rotation.from_matrix(display_t_tcp[:3, :3]).as_quat()[[3, 0, 1, 2]]
             hande_wxyz = Rotation.from_matrix(display_t_hande[:3, :3]).as_quat()[[3, 0, 1, 2]]
+            flange_adapter_wxyz = Rotation.from_matrix(display_t_flange_adapter[:3, :3]).as_quat()[
+                [3, 0, 1, 2]
+            ]
             tray_wxyz = Rotation.from_matrix(display_t_tray[:3, :3]).as_quat()[[3, 0, 1, 2]]
             cathode_plate_wxyz = Rotation.from_matrix(display_t_cathode_plate[:3, :3]).as_quat()[
                 [3, 0, 1, 2]
@@ -1574,6 +1644,8 @@ def launch_visualization(
                 tcp_handle.position = display_t_tcp[:3, 3]
                 tcp_handle.wxyz = tcp_wxyz
                 tcp_marker.position = display_t_tcp[:3, 3]
+                flange_adapter_root.position = display_t_flange_adapter[:3, 3]
+                flange_adapter_root.wxyz = flange_adapter_wxyz
                 hande_root.position = display_t_hande[:3, 3]
                 hande_root.wxyz = hande_wxyz
                 tray_root.position = display_t_tray[:3, 3]
@@ -1618,7 +1690,7 @@ def add_solved_paths(
     scene: object,
     display_transform: np.ndarray,
     frames: list[AnimationFrame],
-) -> None:
+) -> list[object]:
     """Draw one colored line strip for each command stage."""
 
     palette = (
@@ -1632,6 +1704,7 @@ def add_solved_paths(
     )
     ordered_names: list[str] = []
     by_stage: dict[str, list[np.ndarray]] = {}
+    handles: list[object] = []
     for frame in frames:
         if frame.stage_name not in by_stage:
             ordered_names.append(frame.stage_name)
@@ -1644,12 +1717,15 @@ def add_solved_paths(
         display_points = transform_points(display_transform, points)
         color = palette[index % len(palette)]
         safe_name = re.sub(r"[^a-zA-Z0-9_-]+", "_", name).strip("_")
-        scene.add_line_segments(
-            f"/solved_motion/{index:02d}_{safe_name}",
-            points=np.stack([display_points[:-1], display_points[1:]], axis=1),
-            colors=np.tile(np.asarray(color, dtype=np.uint8), (len(points) - 1, 2, 1)),
-            line_width=3.0,
+        handles.append(
+            scene.add_line_segments(
+                f"/solved_motion/{index:02d}_{safe_name}",
+                points=np.stack([display_points[:-1], display_points[1:]], axis=1),
+                colors=np.tile(np.asarray(color, dtype=np.uint8), (len(points) - 1, 2, 1)),
+                line_width=3.0,
+            )
         )
+    return handles
 
 
 def print_summary(events: list[MotionEvent], frames: list[AnimationFrame]) -> None:
