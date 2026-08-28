@@ -18,6 +18,7 @@ dependencies = [
     "pyrealsense2>=2.58.1.10581",
     "open3d>=0.19.0",
     "pyroki",
+    "numpy-quaternion>=2024.0.13",
 ]
 
 [project.scripts]

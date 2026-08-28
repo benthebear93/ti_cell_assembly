@@ -306,6 +306,198 @@ To preflight the complete trajectory without starting a browser server:
 uv run python scripts/assembly_task.py preview-motion --plan-only
 ```
 
+## Train DMPs For The Complete Assembly Motion
+
+Train one Cartesian DMP for every continuous `moveL` stage in the full real
+assembly sequence:
+
+```bash
+uv run python scripts/assembly_task.py train-all-motion-dmps \
+  --output data/dmp/all_assembly_motion_dmps.npz
+```
+
+This is fully offline. It reconstructs the same command targets as
+`marker_based_motion.py`, validates the complete nominal path with strict
+PyRoki IK, and trains 27 ordered move primitives. The eight gripper/dwell
+commands remain discrete events in the same 35-event program. It never opens
+an RTDE, gripper, or camera connection.
+
+The NPZ stores position and quaternion-DMP weights, start/goal poses, durations,
+training seeds, and the event-to-primitive mapping. The JSON beside it records
+the ordered program and reproduction errors. As a final check, the trainer
+loads only the saved weights and endpoints into fresh DMP instances, rolls out
+all 27 motions without calling `train()`, and compares them with the trained
+models. Generated files under `data/dmp/` are ignored by Git.
+
+Replay every saved primitive for a complete nominal task, return the same robot
+to the shared start, reset the visual workpieces, and then replay the complete
+task at a marker-frame goal offset:
+
+```bash
+uv run python scripts/assembly_task.py compare-all-motion-dmp \
+  --offset-marker-mm 20 -200 0
+```
+
+Add a third complete task at marker offset `(X -250, Y +150, Z 0) mm` in the
+same one-robot viewer:
+
+```bash
+uv run python scripts/assembly_task.py compare-all-motion-dmp \
+  --offset-marker-mm 20 -200 0 \
+  --second-offset-marker-mm -250 150 0
+```
+
+The sequence is nominal, first offset, then second offset, with a return to the
+shared robot start and newly introduced tray/cathode workpieces between tasks.
+The second task completes both part insertions and the original post-release
+tail at `(-250, 150, 0)`. The placement leaves the holder and inserted
+workpieces physically disjoint. A conservative dense swept-volume check over
+the nominal/first-offset DMP path gives 49.5 mm minimum AABB clearance between the
+second holder and the UR5e collision meshes plus the flange-adapter/Hand-E
+envelope. The originally tested `(40, -400, 0)` placement has no strict IK
+solution for the empty-gripper X-rotation after release; `(-250, 150, 0)` keeps
+the full unmodified 27-stage Cartesian program inside the verified IK region.
+
+Each task uses all 27 saved move DMPs plus the original eight gripper/dwell
+events. The offset half rebuilds all holder-relative targets before changing
+each primitive start/goal; it does not retrain the weights. Both full paths are
+strict-IK checked before the one-robot, original-material Viser scene starts.
+Nominal tray/cathode objects remain at their completed holder poses; the offset
+half introduces a separate tray and cathode plate instead of teleporting or
+reusing the nominal workpieces.
+
+Translation and holder-frame yaw can be retargeted together. For example,
+shift the second task by marker X `+200 mm` and rotate its complete holder frame
+by marker Z `+90°`:
+
+```bash
+uv run python scripts/assembly_task.py compare-all-motion-dmp \
+  --offset-marker-mm 200 0 0 \
+  --offset-yaw-deg 90
+```
+
+The X `+200 mm`, marker-Z `+180°` offset lies on the edge of the UR5e workspace
+with the nominal TCP-to-part grasp. Since the nominal holder origin starts at
+X `-60 mm`, the resulting offset holder origin is marker X `+140 mm`. Use the
+Hand-E's equivalent local-Y-flipped grasp, move the grasp point 10 mm inward,
+and require a 50 mm post-grasp lift:
+
+```bash
+uv run python scripts/assembly_task.py compare-all-motion-dmp \
+  --offset-marker-mm 200 0 0 \
+  --offset-yaw-deg 180 \
+  --post-grasp-lift-mm 50 \
+  --offset-equivalent-grasp-y-flip \
+  --offset-grasp-shift-z-mm 10
+```
+
+This keeps the tray/cathode pin goals fixed. Only the visualization-only grasp
+gauge changes. If a retargeted DMP curve leaves the strict-IK region, the viewer
+projects that primitive toward its endpoint-equivalent `moveL` path and reports
+the retained DMP-shape percentage. It still never changes or executes the real
+robot controller program.
+
+## Generate Tray Pick/Insert DMP Demonstrations
+
+Fit three Cartesian DMP primitives (grasp approach, free-space transfer, and
+constrained insertion) to the real tray motion prefix and generate synthetic
+demonstrations offline:
+
+```bash
+uv run python scripts/assembly_task.py generate-tray-dmp \
+  --episodes 20 \
+  --initial-joint-noise-deg 5 \
+  --output data/dmp/tray_pick_insert_dmp.npz
+```
+
+The generator imports `CartesianDMP` from `~/simple_dmp`, keeps gripper
+close/open as discrete phases, and fixes every generated grasp and insertion
+endpoint to the original motion. The first episode uses the nominal initial
+joint pose. Later episodes independently sample each initial joint within the
+requested half-range, use FK for the matching initial TCP, and adapt the grasp
+approach DMP from that start. Free-space DMP weights and episode timing are also
+varied; insertion weight noise is disabled by default. Every candidate is
+checked with strict PyRoki IK, joint limits, initial-TCP displacement limits,
+branch continuity, joint speed, and the tray-to-four-pin endpoint fit before it
+is accepted.
+
+The compressed NPZ contains episode boundaries, time, TCP and joint states,
+gripper state, phase IDs, next-pose actions, and local TCP delta actions. A JSON
+file beside it records DMP reproduction errors, variation amounts, rejection
+reasons, and validation results. Generated `data/dmp/` files are ignored by
+Git. These are kinematic synthetic trajectories: collision/contact physics,
+camera observations, and real-robot success are deliberately not claimed.
+Schema version 2 additionally stores per-episode initial joint positions, FK
+TCP poses, and joint offsets as `episode_initial_*` arrays.
+
+Retarget the trained transfer/insertion DMP goals by a fixed marker-frame
+translation without retraining their nominal weights:
+
+```bash
+uv run python scripts/assembly_task.py generate-tray-dmp \
+  --goal-offset-marker-mm 50 0 0 \
+  --episodes 20 \
+  --output data/dmp/tray_pick_insert_dmp_xplus50.npz
+```
+
+The offset is stored in JSON metadata. `preview-tray-dmp` reads it automatically
+and moves the visual holder/pins by the same marker-frame translation, so no
+extra viewer offset argument is needed.
+
+Generate goal-conditioned recovery demonstrations from those base episodes:
+
+```bash
+uv run python scripts/assembly_task.py generate-tray-dmp-recovery \
+  --input data/dmp/tray_pick_insert_dmp.npz \
+  --recoveries-per-episode 2 \
+  --output data/dmp/tray_pick_insert_dmp_recovery.npz
+```
+
+For each base episode, the recovery generator varies the selected free-space
+phase start and goal, rolls out a nominal DMP, perturbs one intermediate
+position/orientation, and trains a suffix DMP back to the varied goal. The
+output stores both the nominal path and ragged recovery paths. Recovery samples
+include PyRoki-FK state, next TCP/joint command, local next-action delta, and a
+direct local residual to the conditioned goal. Goal variation defaults to the
+`transfer_to_preinsert` phase only; it does not alter the base dataset's exact
+four-pin insertion endpoint.
+
+This remains kinematic data. “Realized state” means strict-IK joints evaluated
+again with PyRoki FK; controller lag, dynamics, contact, MuJoCo, and the real
+robot are not involved.
+
+Inspect a generated dataset in the offline Viser viewer:
+
+```bash
+uv run python scripts/assembly_task.py preview-tray-dmp \
+  --dataset data/dmp/tray_pick_insert_dmp.npz
+```
+
+The viewer overlays every generated TCP path in gray and colors the selected
+episode by DMP phase. Use **Episode** to switch demonstrations, **Play** and
+**Playback multiplier** to animate them, and the two path checkboxes to hide or
+show the overlays. Initial TCP markers and the **Start joint**/**Start TCP**
+fields make the randomized starting-state spread explicit. The robot follows
+the saved joint trajectory while the tray is attached and is left seated on
+the four holder pins after release. This viewer never opens an RTDE or gripper
+connection.
+
+Preview a single robot executing the nominal task and then moving that same tray
+from the nominal pins to the retargeted goal:
+
+```bash
+uv run python scripts/assembly_task.py compare-tray-dmp \
+  --nominal-dataset data/dmp/tray_pick_insert_dmp_initial6.npz \
+  --offset-dataset data/dmp/tray_pick_insert_dmp_xplus20_yminus50.npz
+```
+
+The viewer first plays the complete nominal pick/insert/release. Without
+resetting the robot or tray, it closes the gripper again at the nominal inserted
+pose, reverses the constrained insertion to lift the tray clear of the pins,
+uses a strict-IK moveL bridge between the two pre-insert poses, and then plays
+the offset insertion/release. The robot and workcell keep their original
+materials; this remains a read-only offline visualization.
+
 ## Export A MuJoCo Scene
 
 Generate a fixed MJCF scene with the ceiling-mounted UR5e, an attached Hand-E

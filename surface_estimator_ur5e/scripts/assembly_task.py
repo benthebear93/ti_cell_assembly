@@ -52,9 +52,43 @@ STAGES: tuple[TaskStage, ...] = (
         name="preview-motion",
         aliases=("animate", "offline-motion"),
         module_name="preview_assembly_motion",
-        summary=(
-            "Animate the real marker-based assembly command path offline with PyRoki IK."
-        ),
+        summary=("Animate the real marker-based assembly command path offline with PyRoki IK."),
+    ),
+    TaskStage(
+        name="train-all-motion-dmps",
+        aliases=("train-motion-dmps", "all-motion-dmps"),
+        module_name="train_all_motion_dmps",
+        summary=("Train and persist DMP weights for every moveL in the complete assembly path."),
+    ),
+    TaskStage(
+        name="generate-tray-dmp",
+        aliases=("tray-dmp", "dmp-dataset"),
+        module_name="generate_tray_dmp_dataset",
+        summary=("Generate PyRoki-validated tray pick-and-insert DMP demonstrations offline."),
+    ),
+    TaskStage(
+        name="preview-tray-dmp",
+        aliases=("view-tray-dmp", "dmp-viewer"),
+        module_name="preview_tray_dmp_dataset",
+        summary="Animate and compare generated tray DMP demonstrations in Viser.",
+    ),
+    TaskStage(
+        name="compare-tray-dmp",
+        aliases=("compare-dmp", "dual-dmp-viewer"),
+        module_name="preview_tray_dmp_comparison",
+        summary=("Animate one robot doing nominal insert, regrasp/lift, then offset insert."),
+    ),
+    TaskStage(
+        name="compare-all-motion-dmp",
+        aliases=("all-motion-dmp-viewer", "full-dmp-comparison"),
+        module_name="preview_all_motion_dmp_comparison",
+        summary=("Run all 27 DMP moves for nominal, return/reset, then the full offset task."),
+    ),
+    TaskStage(
+        name="generate-tray-dmp-recovery",
+        aliases=("tray-dmp-recovery", "recovery-dataset"),
+        module_name="generate_tray_dmp_recovery_dataset",
+        summary=("Generate PyRoki-realized recovery demonstrations from perturbed DMP states."),
     ),
     TaskStage(
         name="read-marker",
@@ -141,6 +175,12 @@ def print_help() -> None:
     print("Examples:")
     print("  uv run python scripts/assembly_task.py visualize --show-holder --show-tray")
     print("  uv run python scripts/assembly_task.py preview-motion")
+    print("  uv run python scripts/assembly_task.py train-all-motion-dmps")
+    print("  uv run python scripts/assembly_task.py generate-tray-dmp --episodes 20")
+    print("  uv run python scripts/assembly_task.py generate-tray-dmp-recovery")
+    print("  uv run python scripts/assembly_task.py preview-tray-dmp --dataset data/dmp/demo.npz")
+    print("  uv run python scripts/assembly_task.py compare-tray-dmp")
+    print("  uv run python scripts/assembly_task.py compare-all-motion-dmp")
     print("  uv run python scripts/assembly_task.py marker-target --save-target")
     print("  uv run python scripts/assembly_task.py holder-align --save-plan")
     print()

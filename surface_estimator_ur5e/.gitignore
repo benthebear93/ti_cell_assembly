@@ -32,3 +32,6 @@ images/**/*metadata.yaml
 images/**/viewer.html
 !images/tcp_image_alignment_20260715_114251/aligned_034_y_m03p750deg_xp00p000mm_zm04p750mm_metadata.yaml
 !images/tcp_image_alignment_20260715_133958/aligned_017_y_p02p500deg_xp00p500mm_zp01p250mm_metadata.yaml
+
+# Generated synthetic demonstration datasets
+data/dmp/
