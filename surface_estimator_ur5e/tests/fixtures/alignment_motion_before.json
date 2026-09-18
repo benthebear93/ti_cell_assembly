@@ -1,0 +1,294 @@
+{
+  "dry_run": {
+    "settings": {},
+    "error": null,
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "lift_and_rotate": {
+    "settings": {
+      "execute": true
+    },
+    "error": null,
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -1.2052082715,
+          -1.208916083,
+          1.2219476042
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -0.34438927946382714,
+          -0.3383781543988269,
+          1.5263241028036212
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "close_lift_and_rotate": {
+    "settings": {
+      "execute": true,
+      "close_gripper_first": true
+    },
+    "error": null,
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "gripper",
+        "align_tray_to_pins_close",
+        75.0,
+        80,
+        100,
+        true,
+        8.0,
+        0.5
+      ],
+      [
+        "sleep",
+        0.1
+      ],
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -1.2052082715,
+          -1.208916083,
+          1.2219476042
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -0.34438927946382714,
+          -0.3383781543988269,
+          1.5263241028036212
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "raw_marker_with_offset": {
+    "settings": {
+      "execute": true,
+      "marker_frame_mode": "raw",
+      "tcp_rotation_offset_rpy_deg": [
+        10,
+        0,
+        -5
+      ],
+      "tray_center_tcp_z_mm": 5
+    },
+    "error": "Rotation delta is 170.9 deg, above --max-rotation-deg 120.0. Re-check the frame or add --allow-large-rotation deliberately.",
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "no_tcp_setting": {
+    "settings": {
+      "execute": true,
+      "no_set_tcp": true
+    },
+    "error": null,
+    "events": [
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -1.2052082715,
+          -1.208916083,
+          1.2219476042
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "moveL",
+        [
+          -0.2368442756,
+          -0.4167985216,
+          0.6913085774,
+          -0.34438927946382714,
+          -0.3383781543988269,
+          1.5263241028036212
+        ],
+        0.01,
+        0.02,
+        false
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "rotation_limit": {
+    "settings": {
+      "execute": true,
+      "max_rotation_deg": 1
+    },
+    "error": "Rotation delta is 64.7 deg, above --max-rotation-deg 1.0. Re-check the frame or add --allow-large-rotation deliberately.",
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  },
+  "lift_limit": {
+    "settings": {
+      "execute": true,
+      "max_safety_lift_mm": 0
+    },
+    "error": "Required safety lift is 15.0 mm, above --max-safety-lift-mm 0.0. Re-check the pose.",
+    "events": [
+      [
+        "setTcp",
+        [
+          0.0,
+          0.0,
+          0.158,
+          -1.5707,
+          0.0,
+          0.0
+        ]
+      ],
+      [
+        "stopScript"
+      ],
+      [
+        "disconnect"
+      ],
+      [
+        "disconnect"
+      ]
+    ]
+  }
+}

@@ -19,6 +19,9 @@ import numpy as np
 import pyroki as pk
 from scipy.spatial.transform import Rotation
 
+from surface_estimator_ur5e.robot_model import DEFAULT_JOINT_ORDER, DEFAULT_ROBOT_DESCRIPTION
+from surface_estimator_ur5e.transforms import transform_to_ur_pose, ur_pose_to_transform
+
 
 @jdc.jit
 def _solve_ik_jax(
@@ -72,7 +75,7 @@ class PyrokiRTDEControlAdapter:
 
     initial_q_rad: np.ndarray
     tcp_offset_ur: np.ndarray
-    description_name: str = "ur5e_description"
+    description_name: str = DEFAULT_ROBOT_DESCRIPTION
     target_link_name: str = "tool0"
     _urdf: Any = field(init=False, repr=False)
     _robot: pk.Robot = field(init=False, repr=False)
@@ -98,14 +101,7 @@ class PyrokiRTDEControlAdapter:
         self.tcp_offset_ur = tcp_offset
         self._urdf = load_robot_description(self.description_name)
         actuated_names = tuple(self._urdf.actuated_joint_names)
-        expected_names = (
-            "shoulder_pan_joint",
-            "shoulder_lift_joint",
-            "elbow_joint",
-            "wrist_1_joint",
-            "wrist_2_joint",
-            "wrist_3_joint",
-        )
+        expected_names = DEFAULT_JOINT_ORDER
         if actuated_names != expected_names:
             raise RuntimeError(
                 "Unexpected UR5e actuated joint order: "
@@ -275,30 +271,6 @@ class PyrokiRTDEControlAdapter:
         self._last_result = result.copy()
         self._last_errors = (position_error_m, orientation_error_rad)
         return result
-
-
-def ur_pose_to_transform(pose_ur: np.ndarray) -> np.ndarray:
-    """Convert UR ``[x, y, z, rx, ry, rz]`` pose to a homogeneous transform."""
-
-    pose = np.asarray(pose_ur, dtype=float)
-    if pose.shape != (6,):
-        raise ValueError(f"Expected a six-dimensional UR pose, got {pose.shape}.")
-    transform = np.eye(4)
-    transform[:3, 3] = pose[:3]
-    transform[:3, :3] = Rotation.from_rotvec(pose[3:]).as_matrix()
-    return transform
-
-
-def transform_to_ur_pose(transform: np.ndarray) -> np.ndarray:
-    """Convert a homogeneous transform to UR position plus rotation vector."""
-
-    matrix = np.asarray(transform, dtype=float)
-    if matrix.shape != (4, 4):
-        raise ValueError(f"Expected a 4x4 transform, got {matrix.shape}.")
-    pose = np.empty(6, dtype=float)
-    pose[:3] = matrix[:3, 3]
-    pose[3:] = Rotation.from_matrix(matrix[:3, :3]).as_rotvec()
-    return pose
 
 
 def wxyz_xyz_to_transform(pose: np.ndarray) -> np.ndarray:

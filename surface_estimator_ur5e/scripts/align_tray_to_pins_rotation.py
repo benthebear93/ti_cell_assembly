@@ -4,22 +4,31 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import time
-from typing import Any
+from pathlib import Path
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 import yaml
+from scipy.spatial.transform import Rotation
 
+from surface_estimator_ur5e.calibration import load_marker_transform
 from surface_estimator_ur5e.live_robot import DEFAULT_ROBOT_IP
 from surface_estimator_ur5e.motion_sequence import (
     DEFAULT_GRIPPER_PORT,
     GripperCommand,
     RobotiqHandEGripper,
 )
-
-from visualize_marker_frame import (
+from surface_estimator_ur5e.robot_io import (
+    connect_rtde_control,
+    read_current_tcp_pose,
+    set_tcp_offset,
+)
+from surface_estimator_ur5e.transforms import (
+    marker_relative_transform,
+    rotation_delta_deg,
+    ur_pose_to_transform,
+)
+from surface_estimator_ur5e.workcell_geometry import (
     DEFAULT_ASSEMBLY_LOCAL_YAW_DEG,
     DEFAULT_ASSEMBLY_ORIGIN_X_MM,
     DEFAULT_ASSEMBLY_ORIGIN_Y_MM,
@@ -33,17 +42,16 @@ from visualize_marker_frame import (
     DEFAULT_VIRTUAL_TRAY_LOCAL_RX_DEG,
     DEFAULT_VIRTUAL_TRAY_OBJ,
     DEFAULT_VIRTUAL_TRAY_TCP_Z_MM,
-    TI_TRAY_PROTRUSION_CENTER_M,
     floor_constrained_marker_transform,
     four_pin_feature_frame,
-    load_marker_transform,
-    marker_relative_transform,
-    rotation_transform,
-    shortened_lower_handle_point,
-    shorten_lower_tray_handle,
-    translation_transform,
+    load_tray_geometry,
+    resolve_project_path,
+    tray_floor_clearance_m,
+    with_base_z_lift,
 )
-
+from surface_estimator_ur5e.workcell_geometry import (
+    make_four_pin_rotation_target as make_rotation_only_target,
+)
 
 DEFAULT_PLAN_OUTPUT = Path("data/markers/four_pin_rotation_align_plan.yaml")
 DEFAULT_SAFE_FLOOR_CLEARANCE_MM = 15.0
@@ -224,12 +232,6 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--max-safety-lift-mm must be non-negative.")
 
 
-def resolve_project_path(path: Path) -> Path:
-    if path.is_absolute():
-        return path
-    return Path(__file__).resolve().parents[1] / path
-
-
 def compute_base_t_pin_frame(args: argparse.Namespace) -> tuple[int | None, np.ndarray, float]:
     marker_id, _marker_length_m, base_t_marker_raw, _marker_data = load_marker_transform(
         resolve_project_path(args.marker_pose)
@@ -256,127 +258,6 @@ def compute_base_t_pin_frame(args: argparse.Namespace) -> tuple[int | None, np.n
         resolve_project_path(args.assembly_obj)
     )
     return marker_id, base_t_marker @ marker_t_assembly @ assembly_t_pin, float(base_t_marker[2, 3])
-
-
-def read_current_tcp_pose(robot_ip: str) -> tuple[Any, np.ndarray]:
-    try:
-        from rtde_receive import RTDEReceiveInterface
-    except ImportError as exc:
-        raise RuntimeError("ur_rtde is not installed. Run 'uv sync' from the repo root.") from exc
-
-    rtde_receive = RTDEReceiveInterface(robot_ip)
-    tcp_pose = np.asarray(rtde_receive.getActualTCPPose(), dtype=float)
-    if tcp_pose.shape != (6,):
-        raise RuntimeError(f"Expected 6D TCP pose from RTDE, got {tcp_pose.shape}.")
-    return rtde_receive, tcp_pose
-
-
-def connect_rtde_control(robot_ip: str) -> Any:
-    try:
-        from rtde_control import RTDEControlInterface
-    except ImportError as exc:
-        raise RuntimeError("ur_rtde control module is not installed. Run 'uv sync'.") from exc
-    return RTDEControlInterface(robot_ip)
-
-
-def set_tcp_offset(rtde_control: Any, tcp_offset_ur: list[float]) -> None:
-    tcp_offset = [float(value) for value in tcp_offset_ur]
-    if not rtde_control.setTcp(tcp_offset):
-        raise RuntimeError(f"Failed to set active TCP offset to {fmt(np.asarray(tcp_offset))}.")
-
-
-def make_rotation_only_target(
-    current_tcp_pose_ur: np.ndarray,
-    base_t_pin: np.ndarray,
-    tcp_rotation_offset_rpy_deg: tuple[float, float, float] | list[float],
-) -> np.ndarray:
-    pin_r_tcp_target = Rotation.from_euler(
-        "xyz",
-        np.asarray(tcp_rotation_offset_rpy_deg, dtype=float),
-        degrees=True,
-    ).as_matrix()
-    target_rotation = base_t_pin[:3, :3] @ pin_r_tcp_target
-    target_tcp_pose = np.asarray(current_tcp_pose_ur, dtype=float).copy()
-    target_tcp_pose[3:6] = Rotation.from_matrix(target_rotation).as_rotvec()
-    return target_tcp_pose
-
-
-def pose_vector_to_transform(pose_ur: np.ndarray) -> np.ndarray:
-    transform = np.eye(4)
-    transform[:3, 3] = np.asarray(pose_ur[:3], dtype=float)
-    transform[:3, :3] = Rotation.from_rotvec(pose_ur[3:6]).as_matrix()
-    return transform
-
-
-def transform_points(transform: np.ndarray, points: np.ndarray) -> np.ndarray:
-    return (transform[:3, :3] @ np.asarray(points, dtype=float).T).T + transform[:3, 3]
-
-
-def load_virtual_tray_geometry(args: argparse.Namespace) -> tuple[np.ndarray, np.ndarray]:
-    import trimesh
-
-    mesh = trimesh.load(resolve_project_path(args.tray_obj), force="mesh", process=False)
-    handle_root_y_m = args.tray_handle_root_y_mm / 1000.0
-    shorten_lower_tray_handle(
-        mesh,
-        handle_root_y_m,
-        args.tray_handle_scale,
-    )
-    tray_attachment_local = shortened_lower_handle_point(
-        TI_TRAY_PROTRUSION_CENTER_M,
-        handle_root_y_m,
-        args.tray_handle_scale,
-    )
-    return np.asarray(mesh.vertices, dtype=float), tray_attachment_local
-
-
-def tray_vertices_in_base(
-    tcp_pose_ur: np.ndarray,
-    tray_vertices: np.ndarray,
-    tray_attachment_local: np.ndarray,
-    tray_center_tcp_z_mm: float,
-    tray_local_rx_deg: float,
-) -> np.ndarray:
-    base_t_tray = (
-        pose_vector_to_transform(tcp_pose_ur)
-        @ translation_transform([0.0, 0.0, tray_center_tcp_z_mm / 1000.0])
-        @ rotation_transform("x", tray_local_rx_deg)
-        @ translation_transform(-tray_attachment_local)
-    )
-    return transform_points(base_t_tray, tray_vertices)
-
-
-def tray_floor_clearance_m(
-    tcp_pose_ur: np.ndarray,
-    tray_vertices: np.ndarray,
-    tray_attachment_local: np.ndarray,
-    floor_z_m: float,
-    tray_center_tcp_z_mm: float,
-    tray_local_rx_deg: float,
-) -> float:
-    vertices_base = tray_vertices_in_base(
-        tcp_pose_ur,
-        tray_vertices,
-        tray_attachment_local,
-        tray_center_tcp_z_mm,
-        tray_local_rx_deg,
-    )
-    # Base +Z is physical down in this workcell; floor contact is max base z.
-    return floor_z_m - float(np.max(vertices_base[:, 2]))
-
-
-def with_base_z_lift(pose_ur: np.ndarray, lift_m: float) -> np.ndarray:
-    lifted = np.asarray(pose_ur, dtype=float).copy()
-    # Lifting away from the floor is base -Z because the UR base is ceiling-mounted.
-    lifted[2] -= float(lift_m)
-    return lifted
-
-
-def rotation_delta_deg(current_tcp_pose_ur: np.ndarray, target_tcp_pose_ur: np.ndarray) -> float:
-    current_rotation = Rotation.from_rotvec(current_tcp_pose_ur[3:6]).as_matrix()
-    target_rotation = Rotation.from_rotvec(target_tcp_pose_ur[3:6]).as_matrix()
-    delta = Rotation.from_matrix(target_rotation @ current_rotation.T)
-    return float(np.rad2deg(delta.magnitude()))
 
 
 def tray_center_position(tcp_pose_ur: np.ndarray, tray_center_tcp_z_mm: float) -> np.ndarray:
@@ -480,7 +361,9 @@ def main() -> None:
     validate_args(args)
 
     marker_id, base_t_pin, floor_z_m = compute_base_t_pin_frame(args)
-    tray_vertices, tray_attachment_local = load_virtual_tray_geometry(args)
+    tray_vertices, tray_attachment_local = load_tray_geometry(
+        resolve_project_path(args.tray_obj), args.tray_handle_root_y_mm, args.tray_handle_scale
+    )
 
     rtde_receive = None
     rtde_control = None
@@ -500,7 +383,7 @@ def main() -> None:
         current_tray_center = tray_center_position(current_tcp_pose_ur, args.tray_center_tcp_z_mm)
         target_tray_center = tray_center_position(target_tcp_pose_ur, args.tray_center_tcp_z_mm)
         current_clearance_m = tray_floor_clearance_m(
-            current_tcp_pose_ur,
+            ur_pose_to_transform(current_tcp_pose_ur),
             tray_vertices,
             tray_attachment_local,
             floor_z_m,
@@ -508,7 +391,7 @@ def main() -> None:
             args.tray_local_rx_deg,
         )
         target_clearance_m = tray_floor_clearance_m(
-            target_tcp_pose_ur,
+            ur_pose_to_transform(target_tcp_pose_ur),
             tray_vertices,
             tray_attachment_local,
             floor_z_m,

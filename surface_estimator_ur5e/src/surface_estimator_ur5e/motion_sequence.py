@@ -2,17 +2,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
 import socket
 import time
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 import yaml
+from scipy.spatial.transform import Rotation
 
 from surface_estimator_ur5e.live_robot import DEFAULT_ROBOT_IP
+from surface_estimator_ur5e.transforms import (
+    pose_translated_in_tcp_frame as _tool_offset_target_pose,
+)
+from surface_estimator_ur5e.transforms import (
+    ur_pose_to_transform as _pose_vector_to_transform,
+)
 
 DEFAULT_TCP_OFFSET_UR = np.array([0.0, 0.0, 0.152, 0.0, 0.0, 0.0])
 DEFAULT_GRIPPER_PORT = 63352
@@ -891,14 +897,7 @@ def _raise_if_start_pose_too_far(
 
 def _tool_negative_z_target_pose(tcp_pose: np.ndarray, distance_m: float) -> np.ndarray:
     """Return a UR TCP pose translated along local/tool negative Z."""
-
-    pose = np.asarray(tcp_pose, dtype=float)
-    if pose.shape != (6,):
-        raise ValueError(f"Expected 6D TCP pose, got {pose.shape}.")
-    rotation = Rotation.from_rotvec(pose[3:]).as_matrix()
-    target = pose.copy()
-    target[:3] = pose[:3] + rotation @ np.array([0.0, 0.0, -distance_m])
-    return target
+    return _tool_offset_target_pose(tcp_pose, np.array([0.0, 0.0, -distance_m]))
 
 
 def _execute_tool_frame_movel_offsets(
@@ -988,19 +987,6 @@ def _force_mode_task_frame(compliance: ComplianceConfig, tcp_pose: np.ndarray) -
     raise ValueError(f"Unsupported compliance task frame: {compliance.task_frame}")
 
 
-def _tool_offset_target_pose(tcp_pose: np.ndarray, offset_m: np.ndarray) -> np.ndarray:
-    pose = np.asarray(tcp_pose, dtype=float)
-    if pose.shape != (6,):
-        raise ValueError(f"Expected 6D TCP pose, got {pose.shape}.")
-    offset = np.asarray(offset_m, dtype=float)
-    if offset.shape != (3,):
-        raise ValueError(f"Expected 3D TCP offset, got {offset.shape}.")
-    rotation = Rotation.from_rotvec(pose[3:]).as_matrix()
-    target = pose.copy()
-    target[:3] = pose[:3] + rotation @ offset
-    return target
-
-
 def _add_preview_root(scene: object, name: str, transform: np.ndarray) -> None:
     if not hasattr(scene, "add_frame"):
         return
@@ -1077,13 +1063,6 @@ def _tool_movel_preview_points(
                 points.append(next_tcp_pose[:3, 3].copy())
                 current_tcp_pose = next_tcp_pose
     return np.asarray(points, dtype=float)
-
-
-def _pose_vector_to_transform(pose: np.ndarray) -> np.ndarray:
-    transform = np.eye(4)
-    transform[:3, 3] = pose[:3]
-    transform[:3, :3] = Rotation.from_rotvec(pose[3:]).as_matrix()
-    return transform
 
 
 def _add_path(

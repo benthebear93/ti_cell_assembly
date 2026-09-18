@@ -4,19 +4,18 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
 import math
+from datetime import datetime
 from pathlib import Path
-import xml.etree.ElementTree as ET
 
 import cv2
 import numpy as np
 import pyrealsense2 as rs
 import yaml
 
-
-DEFAULT_CALIBRATION = "data/calibration/realsense_ur5e/Calibration.xml"
-DEFAULT_ROBOT_IP = "192.168.0.24"
+from surface_estimator_ur5e.calibration import DEFAULT_CALIBRATION, load_tool_to_camera
+from surface_estimator_ur5e.robot_io import DEFAULT_ROBOT_IP, read_current_tcp_pose
+from surface_estimator_ur5e.transforms import ur_pose_to_transform
 
 
 def parse_args() -> argparse.Namespace:
@@ -143,50 +142,12 @@ def depth_visualization(depth_mm: np.ndarray) -> np.ndarray:
     return cv2.applyColorMap(scaled, cv2.COLORMAP_TURBO)
 
 
-def parse_float_list(text: str | None) -> list[float]:
-    if text is None:
-        raise ValueError("Missing numeric text in calibration XML.")
-    return [float(value) for value in text.split()]
-
-
-def make_transform(rotation: np.ndarray, translation: np.ndarray) -> np.ndarray:
-    transform = np.eye(4)
-    transform[:3, :3] = rotation
-    transform[:3, 3] = translation
-    return transform
-
-
-def load_tool_to_camera(path: Path) -> np.ndarray:
-    tree = ET.parse(path)
-    root = tree.getroot()
-
-    for result in root.findall(".//CalibrationResult"):
-        moving = result.find("MovingTransform")
-        if moving is None or moving.attrib.get("frame") != "Camera":
-            continue
-
-        translation = np.array(parse_float_list(moving.findtext("Vector3D")), dtype=float)
-        rotation_elem = moving.find("Rotation3D/Rotation3D")
-        if rotation_elem is None:
-            raise RuntimeError(f"Missing MovingTransform rotation in {path}")
-        rotation = np.array(parse_float_list(rotation_elem.text), dtype=float).reshape(3, 3)
-        return make_transform(rotation, translation)
-
-    raise RuntimeError(f"Could not find MovingTransform frame='Camera' in {path}")
-
-
-def ur_pose_to_transform(pose: list[float] | tuple[float, ...]) -> np.ndarray:
-    translation = np.array(pose[:3], dtype=float)
-    rotvec = np.array(pose[3:6], dtype=float)
-    rotation, _ = cv2.Rodrigues(rotvec)
-    return make_transform(rotation, translation)
-
-
 def read_robot_metadata(robot_ip: str, calibration_path: Path) -> dict:
-    from rtde_receive import RTDEReceiveInterface as RTDEReceive
-
-    rtde_r = RTDEReceive(robot_ip)
-    tcp_pose = [float(value) for value in rtde_r.getActualTCPPose()]
+    receive, pose = read_current_tcp_pose(robot_ip)
+    try:
+        tcp_pose = pose.tolist()
+    finally:
+        receive.disconnect()
     base_to_tool = ur_pose_to_transform(tcp_pose)
     tool_to_camera = load_tool_to_camera(calibration_path)
     base_to_camera = base_to_tool @ tool_to_camera

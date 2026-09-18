@@ -12,6 +12,7 @@ from scipy.spatial.transform import Rotation
 import yaml
 
 from surface_estimator_ur5e.geometry import compute_contact_point, estimate_plane_from_points
+from surface_estimator_ur5e.robot_model import DEFAULT_JOINT_ORDER as DEFAULT_JOINT_ORDER
 
 
 @dataclass(frozen=True)
@@ -78,16 +79,6 @@ class ContactData:
                 for contact in self.contacts
             ]
         )
-
-
-DEFAULT_JOINT_ORDER = (
-    "shoulder_pan_joint",
-    "shoulder_lift_joint",
-    "elbow_joint",
-    "wrist_1_joint",
-    "wrist_2_joint",
-    "wrist_3_joint",
-)
 
 
 def load_contact_file(path: str | Path) -> ContactData:

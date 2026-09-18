@@ -2,30 +2,33 @@ import argparse
 import math
 import time
 from datetime import datetime
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import cv2
 import numpy as np
 import pyrealsense2 as rs
 import yaml
-from rtde_receive import RTDEReceiveInterface as RTDEReceive
 
-
-DEFAULT_INTRINSICS = (
-    "data/calibration/realsense_ur5e/camera_intrinsics.yaml"
+from surface_estimator_ur5e.calibration import (
+    DEFAULT_CALIBRATION,
+    DEFAULT_INTRINSICS,
+    load_tool_to_camera,
 )
-DEFAULT_CALIBRATION = (
-    "data/calibration/realsense_ur5e/Calibration.xml"
+from surface_estimator_ur5e.robot_io import (
+    DEFAULT_ROBOT_IP,
+    connect_rtde_control,
+    connect_rtde_receive,
+    set_tcp_offset,
 )
-DEFAULT_TCP_OFFSET_UR = [0.0, 0.0, 0.158, -1.5707, 0.0, 0.0]
+from surface_estimator_ur5e.transforms import make_transform, ur_pose_to_transform
+from surface_estimator_ur5e.workcell_geometry import DEFAULT_TCP_OFFSET_UR
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Detect one ArUco marker and print its pose in the robot base frame."
     )
-    parser.add_argument("--robot-ip", default="192.168.0.24", help="UR robot IP.")
+    parser.add_argument("--robot-ip", default=DEFAULT_ROBOT_IP, help="UR robot IP.")
     parser.add_argument(
         "--marker-length-mm",
         type=float,
@@ -94,41 +97,6 @@ def load_intrinsics(path):
     camera_matrix = np.array(data["camera_matrix"]["data"], dtype=float).reshape(3, 3)
     dist_coeffs = np.array(data["distortion_coefficients"]["data"], dtype=float)
     return camera_matrix, dist_coeffs
-
-
-def parse_float_list(text):
-    return [float(value) for value in text.split()]
-
-
-def load_tool_to_camera(path):
-    tree = ET.parse(path)
-    root = tree.getroot()
-
-    for result in root.findall(".//CalibrationResult"):
-        moving = result.find("MovingTransform")
-        if moving is None or moving.attrib.get("frame") != "Camera":
-            continue
-
-        translation = parse_float_list(moving.find("Vector3D").text)
-        rotation_elem = moving.find("Rotation3D/Rotation3D")
-        rotation = np.array(parse_float_list(rotation_elem.text), dtype=float).reshape(3, 3)
-        return make_transform(rotation, np.array(translation, dtype=float))
-
-    raise RuntimeError(f"Could not find MovingTransform frame='Camera' in {path}")
-
-
-def make_transform(rotation, translation):
-    transform = np.eye(4)
-    transform[:3, :3] = rotation
-    transform[:3, 3] = translation
-    return transform
-
-
-def ur_pose_to_transform(pose):
-    translation = np.array(pose[:3], dtype=float)
-    rotvec = np.array(pose[3:6], dtype=float)
-    rotation, _ = cv2.Rodrigues(rotvec)
-    return make_transform(rotation, translation)
 
 
 def rvec_tvec_to_transform(rvec, tvec):
@@ -236,16 +204,16 @@ def matrix_list(matrix, digits=9):
 
 
 def apply_tcp_offset(robot_ip, tcp_offset_ur):
+    control = connect_rtde_control(robot_ip)
     try:
-        from rtde_control import RTDEControlInterface as RTDEControl
-    except ImportError as exc:
-        raise RuntimeError("ur_rtde control module is not installed. Run 'uv sync'.") from exc
-
-    rtde_c = RTDEControl(robot_ip)
-    tcp_offset = [float(value) for value in tcp_offset_ur]
-    if not rtde_c.setTcp(tcp_offset):
-        raise RuntimeError(f"Failed to set active TCP offset: {tcp_offset}")
-    return rtde_c
+        set_tcp_offset(control, tcp_offset_ur)
+        return control
+    except Exception:
+        try:
+            control.stopScript()
+        finally:
+            control.disconnect()
+        raise
 
 
 def default_save_path(marker_id):
@@ -400,7 +368,7 @@ def main():
     rtde_c = None
     if not args.no_set_tcp:
         rtde_c = apply_tcp_offset(args.robot_ip, args.tcp_offset_ur)
-    rtde_r = RTDEReceive(args.robot_ip)
+    rtde_r = connect_rtde_receive(args.robot_ip)
     pipeline = start_realsense(args)
 
     print("Using:")

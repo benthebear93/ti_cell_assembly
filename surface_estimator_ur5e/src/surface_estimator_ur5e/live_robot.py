@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-import time
 from typing import Any
 
 import numpy as np
-from scipy.spatial.transform import Rotation
 import yaml
+from scipy.spatial.transform import Rotation
 
 from surface_estimator_ur5e.io import DEFAULT_JOINT_ORDER
-
-
-DEFAULT_ROBOT_IP = "192.168.0.24"
+from surface_estimator_ur5e.robot_io import DEFAULT_ROBOT_IP, connect_rtde_receive
 
 
 @dataclass(frozen=True)
@@ -60,14 +58,7 @@ def capture_current_pose(
     if sample_period_s < 0.0:
         raise ValueError("'sample_period_s' must be non-negative.")
 
-    try:
-        from rtde_receive import RTDEReceiveInterface
-    except ImportError as exc:
-        raise RuntimeError(
-            "ur_rtde is not installed. Run 'uv sync' from the repository root."
-        ) from exc
-
-    rtde_receive = RTDEReceiveInterface(robot_ip)
+    rtde_receive = connect_rtde_receive(robot_ip)
     try:
         q_values: list[np.ndarray] = []
         positions: list[np.ndarray] = []

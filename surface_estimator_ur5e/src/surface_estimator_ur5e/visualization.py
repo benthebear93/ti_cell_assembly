@@ -11,6 +11,7 @@ from scipy.spatial.transform import Rotation
 from surface_estimator_ur5e.geometry import PlaneEstimate, make_surface_frame
 from surface_estimator_ur5e.io import ContactData, ContactPose
 from surface_estimator_ur5e.robot_model import SimpleUR5eVisualizer, URDFRobotVisualizer
+from surface_estimator_ur5e.transforms import transform_points as _transform_points
 
 
 def launch_visualization(
@@ -324,7 +325,3 @@ def _ceiling_mount_display_transform() -> np.ndarray:
 
 def _transform_point(transform: np.ndarray, point: np.ndarray) -> np.ndarray:
     return transform[:3, :3] @ np.asarray(point, dtype=float) + transform[:3, 3]
-
-
-def _transform_points(transform: np.ndarray, points: np.ndarray) -> np.ndarray:
-    return (transform[:3, :3] @ np.asarray(points, dtype=float).T).T + transform[:3, 3]

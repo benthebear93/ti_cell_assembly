@@ -1,0 +1,5 @@
+# Optional overrides. Defaults are defined once in assembly_config.py:MotionConfig.
+# Replace {} below with the values you want to change, for example:
+# speed_m_s: 0.02
+# Task selection, --resume and --execute remain command-line options.
+{}

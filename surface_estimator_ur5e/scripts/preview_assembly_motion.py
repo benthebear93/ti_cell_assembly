@@ -4,40 +4,47 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
-from pathlib import Path
 import re
 import time
-from typing import Literal
+from dataclasses import dataclass
+from pathlib import Path
+from typing import TYPE_CHECKING
 
+import assembly_config as motion_config
+from assembly_sequence import MotionEvent, build_assembly_sequence
 import numpy as np
 from scipy.spatial.transform import Rotation, Slerp
-
-import marker_based_motion as motion
-from surface_estimator_ur5e.io import DEFAULT_JOINT_ORDER
-from surface_estimator_ur5e.pyroki_ik import (
-    PyrokiRTDEControlAdapter,
-    ur_pose_to_transform,
-)
-from surface_estimator_ur5e.robot_model import URDFRobotVisualizer
-from surface_estimator_ur5e.visualization import _ceiling_mount_display_transform
 from visualize_marker_frame import (
-    PIN_MATERIAL_NAME,
     add_base_plane,
     add_frame,
     add_marker_square,
     add_ti_assembly_mesh,
-    four_pin_feature_frame,
-    marker_relative_transform,
     set_camera,
-    shorten_lower_tray_handle,
-    transform_points,
-    translation_transform,
 )
 
+from surface_estimator_ur5e.calibration import load_marker_transform
+from surface_estimator_ur5e.io import DEFAULT_JOINT_ORDER
+from surface_estimator_ur5e.robot_model import URDFRobotVisualizer
+from surface_estimator_ur5e.transforms import (
+    marker_relative_transform,
+    rotation_delta_deg,
+    transform_points,
+    translation_transform,
+    ur_pose_to_transform,
+)
+from surface_estimator_ur5e.visualization import _ceiling_mount_display_transform
+from surface_estimator_ur5e.workcell_geometry import (
+    PIN_MATERIAL_NAME,
+    floor_constrained_marker_transform,
+    four_pin_feature_frame,
+    resolve_project_path,
+    shorten_lower_tray_handle,
+)
 
-EventKind = Literal["move", "gripper", "dwell"]
-TrayAction = Literal["attach", "detach"]
+if TYPE_CHECKING:
+    from surface_estimator_ur5e.pyroki_ik import PyrokiRTDEControlAdapter
+
+
 DEFAULT_VISUAL_TRAY_STL = Path("assets/ti_tray_short.stl")
 DEFAULT_VISUAL_CATHODE_PLATE_STL = Path("assets/CATHODE_PLATE_w_handle.stl")
 DEFAULT_VISUAL_FLANGE_ADAPTER_STL = Path("assets/picknik_ur5_realsense_camera_adapter_rev2.STL")
@@ -49,19 +56,6 @@ HANDE_COUPLER_HEIGHT_M = 0.011
 HANDE_BODY_HEIGHT_M = 0.099
 HANDE_FINGER_OFFSET_M = 0.038
 HANDE_FINGER_RANGE_M = 0.030
-
-
-@dataclass(frozen=True)
-class MotionEvent:
-    """One command-equivalent event from the real assembly program."""
-
-    kind: EventKind
-    name: str
-    target_pose_ur: np.ndarray | None = None
-    speed_m_s: float | None = None
-    gripper_percent: float | None = None
-    tray_action: TrayAction | None = None
-    dwell_s: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -94,16 +88,10 @@ class CathodePlateAnimation:
 def parse_args() -> argparse.Namespace:
     """Extend the real motion CLI with offline playback controls."""
 
-    parser = motion.build_arg_parser()
+    parser = motion_config.build_arg_parser(default_task="assembly")
     parser.description = (
         "Offline PyRoki/viser animation of the real marker_based_motion execution path. "
         "This command never connects to or commands the robot."
-    )
-    parser.set_defaults(
-        align_to_four_pin_frame=True,
-        insert_after_pin_approach=True,
-        no_set_tcp=True,
-        execute=False,
     )
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument(
@@ -111,7 +99,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_VISUAL_TRAY_STL,
         help=(
-            "Visualization-only tray mesh. This never replaces --tray-obj in the "
+            "Visualization-only tray mesh. This never replaces tray_obj in the "
             "real motion geometry calculations."
         ),
     )
@@ -173,26 +161,19 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Solve the full offline trajectory and print its summary without opening viser.",
     )
-    args = parser.parse_args()
+    args = motion_config.parse_motion_args(parser)
+    args.no_set_tcp = True
 
     if args.execute:
         parser.error("This is an offline preview; --execute is intentionally forbidden.")
     if not args.start_from_initial_pose:
-        parser.error("Offline full-sequence preview requires --start-from-initial-pose.")
+        parser.error("Offline full-sequence preview cannot use --from-current or --resume.")
+    if args.task == "pick":
+        parser.error("Offline assembly preview requires --task align, insert, or assembly.")
     if args.auto_pin_image_align:
         parser.error(
             "Offline preview cannot perform a live camera search; use saved alignment metadata."
         )
-    continuation_flags = (
-        args.continue_pin_sequence_from_current,
-        args.continue_post_two_pin_release_from_current,
-        args.continue_post_two_pin_after_close_from_current,
-        args.continue_post_two_pin_tail_from_current,
-        args.continue_post_two_pin_tail_next_from_current,
-        args.continue_post_two_pin_tail_extra_from_current,
-    )
-    if any(continuation_flags):
-        parser.error("Current-pose continuation modes are not valid for full offline preview.")
     if args.port <= 0 or args.port > 65535:
         parser.error("--port must be between 1 and 65535.")
     for name in (
@@ -213,337 +194,20 @@ def build_actual_motion_events(
     args: argparse.Namespace,
     ik: PyrokiRTDEControlAdapter,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, list[MotionEvent]]:
-    """Build the same target/action order used by ``marker_based_motion.main``."""
-
-    motion.validate_args(args)
+    """Load the starting state and build the shared assembly preview sequence."""
+    motion_config.validate_args(args)
     initial_q_rad = np.deg2rad(np.asarray(args.initial_q_deg, dtype=float))
     initial_tcp_pose_ur = np.asarray(
-        ik.getForwardKinematics(initial_q_rad.tolist(), args.tcp_offset_ur),
-        dtype=float,
+        ik.getForwardKinematics(initial_q_rad.tolist(), args.tcp_offset_ur), dtype=float,
     )
-    _marker_id, base_t_marker_raw, _marker_data = motion.load_marker_transform(args.marker_pose)
+    _marker_id, _marker_length, base_t_marker_raw, _marker_data = load_marker_transform(args.marker_pose)
     base_t_marker = (
-        motion.floor_constrained_marker_transform(base_t_marker_raw)
+        floor_constrained_marker_transform(base_t_marker_raw)
         if args.marker_frame_mode == "floor"
         else base_t_marker_raw
     )
-    base_t_pin = motion.compute_base_t_four_pin_frame(args, base_t_marker)
-    marker_target_pose = motion.make_target_pose_ur(
-        base_t_marker,
-        motion.marker_target_offset(args),
-        initial_tcp_pose_ur,
-        args.orientation,
-    )
-    grasp_q_rad = motion.require_ik_solution(
-        ik,
-        initial_q_rad,
-        marker_target_pose,
-        "marker grasp",
-    )
-    safe_plan, _lift_waypoints, _rotation_waypoints, _ik_report = motion.select_safe_alignment_plan(
-        ik,
-        marker_target_pose,
-        grasp_q_rad,
-        base_t_pin,
-        float(base_t_marker[2, 3]),
-        args,
-    )
-
-    events: list[MotionEvent] = [
-        MotionEvent("gripper", "pre-motion open", gripper_percent=0.0),
-        MotionEvent(
-            "move",
-            "marker grasp moveL",
-            marker_target_pose,
-            args.speed_m_s,
-        ),
-        MotionEvent(
-            "gripper",
-            "marker target close",
-            gripper_percent=args.gripper_close_percent,
-            tray_action="attach",
-        ),
-        MotionEvent("dwell", "post-grasp dwell", dwell_s=motion.POST_GRASP_DWELL_S),
-        MotionEvent(
-            "move",
-            "post-grasp lift",
-            np.asarray(safe_plan["lifted_current_tcp_pose_ur"], dtype=float),
-            args.speed_m_s,
-        ),
-        MotionEvent(
-            "move",
-            "four-pin rotation",
-            np.asarray(safe_plan["lifted_target_tcp_pose_ur"], dtype=float),
-            args.speed_m_s,
-        ),
-    ]
-    if not args.approach_pin_after_rotation:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    centering_pose, _centering_current, _centering_target, _centering_vector = (
-        motion.pin_centering_target_pose(
-            safe_plan["lifted_target_tcp_pose_ur"],
-            base_t_pin,
-            args,
-        )
-    )
-    approach_pose, _approach_current, _approach_target, _approach_vector = (
-        motion.pin_approach_target_pose(
-            centering_pose,
-            base_t_pin,
-            args,
-            args.pin_approach_clearance_mm,
-        )
-    )
-    events.extend(
-        [
-            MotionEvent(
-                "move",
-                "post-rotation pin centering",
-                centering_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-rotation pin-axis approach",
-                approach_pose,
-                args.speed_m_s,
-            ),
-        ]
-    )
-    current_pose = approach_pose
-    image_correction_pose = motion.print_pin_image_alignment_correction_plan(
-        current_pose,
-        args,
-    )
-    if image_correction_pose is not None:
-        events.append(
-            MotionEvent(
-                "move",
-                "post-approach image alignment correction",
-                image_correction_pose,
-                args.speed_m_s,
-            )
-        )
-        current_pose = image_correction_pose
-    if not args.insert_after_pin_approach:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    insertion_pose, _current_ref, _target_ref, insertion_vector, _a, _b = (
-        motion.pin_insertion_target_pose(
-            current_pose,
-            base_t_pin,
-            args,
-            args.pin_insertion_target_y_mm,
-        )
-    )
-    insertion_distance_mm = float(np.linalg.norm(insertion_vector) * 1000.0)
-    if insertion_distance_mm > args.max_pin_insertion_mm:
-        raise RuntimeError(
-            f"Final insertion is {insertion_distance_mm:.1f} mm, above "
-            f"the {args.max_pin_insertion_mm:.1f} mm safety limit."
-        )
-    events.append(
-        MotionEvent(
-            "move",
-            "final pin insertion descend",
-            insertion_pose,
-            args.pin_insertion_speed_m_s,
-        )
-    )
-    if not args.post_insert_release_retreat:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    events.append(
-        MotionEvent(
-            "gripper",
-            "post-insert open",
-            gripper_percent=0.0,
-            tray_action="detach",
-        )
-    )
-    retreat_y_pose, shift_x_pose, _shift_x_mm = motion.post_insert_retreat_target_poses(
-        insertion_pose,
-        args,
-    )
-    events.extend(
-        [
-            MotionEvent(
-                "move",
-                "post-insert TCP +Y retreat",
-                retreat_y_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-insert TCP +X adjacent-pin shift",
-                shift_x_pose,
-                args.speed_m_s,
-            ),
-        ]
-    )
-    if not args.post_insert_move_to_two_pin:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    two_pin_pose, _adjacent_center, _target_position, _translation = (
-        motion.adjacent_two_pin_tcp_target_pose(shift_x_pose, base_t_pin, args)
-    )
-    events.extend(
-        [
-            MotionEvent(
-                "move",
-                "post-insert move TCP to adjacent two-pin center",
-                two_pin_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "gripper",
-                "post-insert two-pin close",
-                gripper_percent=args.gripper_close_percent,
-            ),
-            MotionEvent(
-                "dwell",
-                "post-two-pin close dwell",
-                dwell_s=motion.POST_TWO_PIN_CLOSE_DWELL_S,
-            ),
-        ]
-    )
-    if not args.post_two_pin_close_retreat:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    close_retreat_pose, close_shift_pose = motion.post_two_pin_close_retreat_target_poses(
-        two_pin_pose,
-        args,
-    )
-    events.extend(
-        [
-            MotionEvent(
-                "move",
-                "post-two-pin-close TCP +Y retreat",
-                close_retreat_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-two-pin-close TCP -X shift",
-                close_shift_pose,
-                args.speed_m_s,
-            ),
-        ]
-    )
-    post_close_correction = motion.print_post_two_pin_close_image_alignment_plan(
-        close_shift_pose,
-        args,
-    )
-    post_close_alignment_will_run = bool(
-        args.post_two_pin_close_image_align
-        and motion.effective_post_two_pin_close_image_alignment_metadata(args) is not None
-    )
-    if post_close_correction is not None:
-        events.append(
-            MotionEvent(
-                "move",
-                "post-two-pin-close image alignment correction",
-                post_close_correction,
-                args.speed_m_s,
-            )
-        )
-    if not post_close_alignment_will_run or not args.post_two_pin_aligned_insert_release:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    aligned_start = post_close_correction if post_close_correction is not None else close_shift_pose
-    (
-        aligned_insert_pose,
-        release_retreat_pose,
-        release_shift_z_pose,
-        release_final_xy_pose,
-        release_rotate_x_pose,
-    ) = motion.post_two_pin_aligned_insert_release_target_poses(aligned_start, args)
-    events.extend(
-        [
-            MotionEvent(
-                "move",
-                "post-two-pin aligned TCP -Y insertion",
-                aligned_insert_pose,
-                args.pin_insertion_speed_m_s,
-            ),
-            MotionEvent(
-                "gripper",
-                "post-two-pin aligned open",
-                gripper_percent=0.0,
-            ),
-            MotionEvent(
-                "move",
-                "post-two-pin release TCP +Y retreat",
-                release_retreat_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-two-pin release TCP Z shift",
-                release_shift_z_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-two-pin release TCP final X/Y shift",
-                release_final_xy_pose,
-                args.speed_m_s,
-            ),
-            MotionEvent(
-                "move",
-                "post-two-pin release TCP final X rotation",
-                release_rotate_x_pose,
-                args.speed_m_s,
-            ),
-        ]
-    )
-    if args.stop_after_post_two_pin_release_rotation:
-        return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
-
-    after_rotation_targets = motion.post_two_pin_release_after_rotation_target_poses(
-        release_rotate_x_pose,
-        args,
-    )
-    for name, pose in after_rotation_targets:
-        events.append(MotionEvent("move", name, pose, args.pin_insertion_speed_m_s))
-    after_rotation_pose = after_rotation_targets[-1][1]
-    events.append(
-        MotionEvent(
-            "gripper",
-            "post-two-pin release final half-close",
-            gripper_percent=args.post_two_pin_release_final_close_percent,
-        )
-    )
-    post_close_yz_pose = motion.pose_translated_in_tcp_frame(
-        after_rotation_pose,
-        np.asarray(
-            [
-                0.0,
-                args.post_two_pin_release_after_rotation_y_mm / 1000.0,
-                motion.DEFAULT_POST_TWO_PIN_RELEASE_AFTER_ROTATION_Z_MM / 1000.0,
-            ],
-            dtype=float,
-        ),
-    )
-    events.append(
-        MotionEvent(
-            "move",
-            "post-two-pin after-close TCP Y/Z shift",
-            post_close_yz_pose,
-            args.pin_insertion_speed_m_s,
-        )
-    )
-    extra_targets = motion.post_two_pin_after_close_target_poses(post_close_yz_pose, args)
-    for name, pose in extra_targets:
-        events.append(MotionEvent("move", name, pose, args.pin_insertion_speed_m_s))
-    tail_targets = motion.post_two_pin_after_close_tail_target_poses(
-        extra_targets[-1][1],
-        args,
-    )
-    for name, pose in tail_targets:
-        events.append(MotionEvent("move", name, pose, args.pin_insertion_speed_m_s))
-    return initial_q_rad, initial_tcp_pose_ur, base_t_marker, events
+    sequence = build_assembly_sequence(args, ik, base_t_marker, initial_tcp_pose_ur, initial_q_rad)
+    return initial_q_rad, initial_tcp_pose_ur, base_t_marker, sequence.events
 
 
 def solve_animation_frames(
@@ -592,8 +256,8 @@ def solve_animation_frames(
                 if not ik.getInverseKinematicsHasSolution(
                     pose.tolist(),
                     current_q.tolist(),
-                    motion.IK_POSITION_TOLERANCE_M,
-                    motion.IK_ORIENTATION_TOLERANCE_RAD,
+                    motion_config.IK_POSITION_TOLERANCE_M,
+                    motion_config.IK_ORIENTATION_TOLERANCE_RAD,
                 ):
                     raise RuntimeError(
                         f"PyRoki found no strict IK solution for '{event.name}' "
@@ -603,13 +267,13 @@ def solve_animation_frames(
                     ik.getInverseKinematics(
                         pose.tolist(),
                         current_q.tolist(),
-                        motion.IK_POSITION_TOLERANCE_M,
-                        motion.IK_ORIENTATION_TOLERANCE_RAD,
+                        motion_config.IK_POSITION_TOLERANCE_M,
+                        motion_config.IK_ORIENTATION_TOLERANCE_RAD,
                     ),
                     dtype=float,
                 )
                 joint_step_deg = float(np.max(np.abs(np.rad2deg(q_next - current_q))))
-                if joint_step_deg > motion.MAX_IK_JOINT_STEP_DEG:
+                if joint_step_deg > motion_config.MAX_IK_JOINT_STEP_DEG:
                     raise RuntimeError(
                         f"IK branch jump of {joint_step_deg:.1f} deg during "
                         f"'{event.name}' sample {sample_index}/{len(samples)}."
@@ -706,7 +370,7 @@ def interpolate_move(
     start = np.asarray(start_pose_ur, dtype=float)
     target = np.asarray(target_pose_ur, dtype=float)
     translation_distance_m = float(np.linalg.norm(target[:3] - start[:3]))
-    rotation_distance_deg = motion.rotation_delta_deg(start, target)
+    rotation_distance_deg = rotation_delta_deg(start, target)
     geometric_segments = max(
         1,
         int(np.ceil(translation_distance_m / (args.trajectory_step_mm / 1000.0))),
@@ -750,7 +414,7 @@ def load_visual_tray_mesh(
 
     import trimesh
 
-    resolved_path = motion.resolve_project_path(tray_path)
+    resolved_path = resolve_project_path(tray_path)
     if not resolved_path.exists():
         raise FileNotFoundError(f"Visual tray mesh not found: {resolved_path}")
     mesh = trimesh.load(resolved_path, force="mesh", process=True)
@@ -886,7 +550,7 @@ def visual_tray_transforms(
         args.assembly_local_yaw_deg,
     )
     _assembly_t_pin, selected_pin_centers, _adjacent = four_pin_feature_frame(
-        motion.resolve_project_path(args.assembly_obj)
+        resolve_project_path(args.assembly_obj)
     )
     base_t_assembly = base_t_marker @ marker_t_assembly
     base_pin_centers = transform_points(base_t_assembly, selected_pin_centers)
@@ -1043,7 +707,7 @@ def visual_cathode_plate_animation(
         args.assembly_local_yaw_deg,
     )
     _assembly_t_pin, selected_pin_centers, adjacent_pin_centers = four_pin_feature_frame(
-        motion.resolve_project_path(args.assembly_obj)
+        resolve_project_path(args.assembly_obj)
     )
     base_t_assembly = base_t_marker @ marker_t_assembly
     base_four_pin_centers = transform_points(base_t_assembly, selected_pin_centers)
@@ -1071,7 +735,7 @@ def visual_cathode_plate_animation(
         np.min(plate_vertices[:, 2]) - np.mean(plate_hole_centers[:, 2])
     )
     pin_support_from_center_m = holder_pin_support_offset_m(
-        motion.resolve_project_path(args.assembly_obj),
+        resolve_project_path(args.assembly_obj),
         adjacent_pin_centers,
         base_t_assembly[:3, :3].T @ base_t_plate_initial[:3, 2],
     )
@@ -1257,7 +921,7 @@ def load_preview_flange_adapter_mesh(mesh_path: Path) -> tuple[object, Path]:
 
     import trimesh
 
-    resolved_path = motion.resolve_project_path(mesh_path)
+    resolved_path = resolve_project_path(mesh_path)
     if not resolved_path.exists():
         raise FileNotFoundError(f"Visual flange adapter mesh not found: {resolved_path}")
     mesh = trimesh.load(resolved_path, force="mesh", process=True)
@@ -1376,7 +1040,7 @@ def launch_visualization(
         wxyz=Rotation.from_matrix(first_display_t_hande[:3, :3]).as_quat()[[3, 0, 1, 2]],
         show_axes=False,
     )
-    hande_mesh_dir = motion.resolve_project_path(HANDE_MESH_DIR)
+    hande_mesh_dir = resolve_project_path(HANDE_MESH_DIR)
     coupler_mesh = load_preview_hande_mesh(
         hande_mesh_dir / "io_coupler.obj",
         600,
@@ -1749,6 +1413,8 @@ def print_summary(events: list[MotionEvent], frames: list[AnimationFrame]) -> No
 
 def main() -> None:
     args = parse_args()
+    from surface_estimator_ur5e.pyroki_ik import PyrokiRTDEControlAdapter
+
     initial_q_rad = np.deg2rad(np.asarray(args.initial_q_deg, dtype=float))
     print("Initializing offline PyRoki UR5e solver (no robot connection)...", flush=True)
     ik = PyrokiRTDEControlAdapter(

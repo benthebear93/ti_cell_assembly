@@ -12,7 +12,12 @@ from scipy.spatial.transform import Rotation
 
 from surface_estimator_ur5e.geometry import PlaneEstimate
 from surface_estimator_ur5e.io import ContactData
-from surface_estimator_ur5e.robot_model import SimpleUR5eVisualizer, URDFRobotVisualizer
+from surface_estimator_ur5e.robot_model import (
+    DEFAULT_JOINT_ORDER,
+    UR5E_ACTUATOR_NAMES,
+    SimpleUR5eVisualizer,
+    URDFRobotVisualizer,
+)
 from surface_estimator_ur5e.visualization import (
     _ceiling_mount_display_transform,
     _transform_point,
@@ -153,22 +158,6 @@ _TI_TRAY_STOP_SEAT_HALF_THICKNESS_M = 0.0005
 _TI_TRAY_STOP_SEAT_RELEASE_OFFSET_M = 0.0066
 _TI_TRAY_STOP_SEAT_TARGET_PENETRATION_M = 0.00005
 _TI_TRAY_STOP_SEAT_FRICTION = "0.6 0.02 0.002"
-_UR5E_ACTUATOR_NAMES = (
-    "shoulder_pan",
-    "shoulder_lift",
-    "elbow",
-    "wrist_1",
-    "wrist_2",
-    "wrist_3",
-)
-_UR5E_MJCF_JOINT_ORDER = (
-    "shoulder_pan_joint",
-    "shoulder_lift_joint",
-    "elbow_joint",
-    "wrist_1_joint",
-    "wrist_2_joint",
-    "wrist_3_joint",
-)
 _UR5E_MJCF_JOINT_LIMITS_RAD = {
     "shoulder_pan_joint": (-6.2831, 6.2831),
     "shoulder_lift_joint": (-6.2831, 6.2831),
@@ -1241,7 +1230,7 @@ def _add_hande_gripper_actuators(root: ET.Element) -> None:
 
 
 def _stiffen_ur5e_position_actuators(root: ET.Element) -> None:
-    for name in _UR5E_ACTUATOR_NAMES:
+    for name in UR5E_ACTUATOR_NAMES:
         actuator = root.find(f"./actuator/general[@name='{name}']")
         if actuator is None:
             continue
@@ -1324,8 +1313,8 @@ def _set_grasp_keyframes(
 def _ur5e_control_qpos_for_contact(q_rad: np.ndarray, joint_order: list[str]) -> np.ndarray:
     q = np.asarray(q_rad, dtype=float)
     by_name = {name: float(value) for name, value in zip(joint_order, q, strict=True)}
-    qpos = np.zeros(len(_UR5E_MJCF_JOINT_ORDER), dtype=float)
-    for index, joint_name in enumerate(_UR5E_MJCF_JOINT_ORDER):
+    qpos = np.zeros(len(DEFAULT_JOINT_ORDER), dtype=float)
+    for index, joint_name in enumerate(DEFAULT_JOINT_ORDER):
         if joint_name not in by_name:
             raise ValueError(f"No contact joint value for MJCF joint '{joint_name}'.")
         value = by_name[joint_name]

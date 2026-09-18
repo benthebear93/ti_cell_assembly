@@ -9,22 +9,8 @@ import warnings
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-_UR5E_ACTUATOR_NAMES = (
-    "shoulder_pan",
-    "shoulder_lift",
-    "elbow",
-    "wrist_1",
-    "wrist_2",
-    "wrist_3",
-)
-_UR5E_JOINT_NAMES = (
-    "shoulder_pan_joint",
-    "shoulder_lift_joint",
-    "elbow_joint",
-    "wrist_1_joint",
-    "wrist_2_joint",
-    "wrist_3_joint",
-)
+from surface_estimator_ur5e.robot_model import DEFAULT_JOINT_ORDER, UR5E_ACTUATOR_NAMES
+
 _HANDE_ACTUATOR_NAMES = ("hande_left_finger", "hande_right_finger")
 _HANDE_JOINT_NAMES = ("hande_left_finger_joint", "hande_right_finger_joint")
 _TRAY_HOLE_SITE_NAMES = (
@@ -136,11 +122,11 @@ def launch_mujoco_grasp_demo(
         data.ctrl[:] = _apply_ctrl_limits(model, model.key_ctrl[key_id], limit_mode)
     mujoco.mj_forward(model, data)
 
-    ur_qpos_adrs = _joint_qpos_addresses(model, _UR5E_JOINT_NAMES)
+    ur_qpos_adrs = _joint_qpos_addresses(model, DEFAULT_JOINT_ORDER)
     hande_qpos_adrs = _joint_qpos_addresses(model, _HANDE_JOINT_NAMES)
-    ur_dof_adrs = _joint_dof_addresses(model, _UR5E_JOINT_NAMES)
+    ur_dof_adrs = _joint_dof_addresses(model, DEFAULT_JOINT_ORDER)
     hande_dof_adrs = _joint_dof_addresses(model, _HANDE_JOINT_NAMES)
-    ur_ctrl_ids = _actuator_ids(model, _UR5E_ACTUATOR_NAMES)
+    ur_ctrl_ids = _actuator_ids(model, UR5E_ACTUATOR_NAMES)
     hande_ctrl_ids = _actuator_ids(model, _HANDE_ACTUATOR_NAMES)
     protrusion_site = _site_id(model, "ti_tray_protrusion_site")
     grasp_site = _site_id(model, "grasp_center_site")
@@ -162,7 +148,7 @@ def launch_mujoco_grasp_demo(
         site_id=grasp_site,
         target_pos=grasp_target,
         target_rotation=grasp_rotation,
-        joint_names=_UR5E_JOINT_NAMES,
+        joint_names=DEFAULT_JOINT_ORDER,
     )
     q_lift = _solve_site_pose_ik(
         model,
@@ -170,7 +156,7 @@ def launch_mujoco_grasp_demo(
         site_id=grasp_site,
         target_pos=grasp_target + np.array([0.0, 0.0, lift_m], dtype=float),
         target_rotation=grasp_rotation,
-        joint_names=_UR5E_JOINT_NAMES,
+        joint_names=DEFAULT_JOINT_ORDER,
         initial_qpos=q_grasp,
     )
     q_insert_path, q_release = _solve_tray_place_ik(
@@ -178,7 +164,7 @@ def launch_mujoco_grasp_demo(
         data,
         grasp_site=grasp_site,
         tray_body=tray_body,
-        joint_names=_UR5E_JOINT_NAMES,
+        joint_names=DEFAULT_JOINT_ORDER,
         q_grasp=q_grasp,
         q_lift=q_lift,
     )
@@ -186,14 +172,14 @@ def launch_mujoco_grasp_demo(
         model,
         data,
         pusher_site=grasp_site,
-        joint_names=_UR5E_JOINT_NAMES,
+        joint_names=DEFAULT_JOINT_ORDER,
         q_release=q_release,
     )
     q_handle_push_segment_durations = _post_insert_segment_durations(
         model,
         data,
         site_id=grasp_site,
-        joint_names=_UR5E_JOINT_NAMES,
+        joint_names=DEFAULT_JOINT_ORDER,
         q_insert_path=q_insert_path,
         q_release=q_release,
         q_handle_push_path=q_handle_push_path,

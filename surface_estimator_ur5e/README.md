@@ -1,43 +1,69 @@
 # Surface Estimator UR5e
 
-Small offline Python package for estimating a planar surface from manually measured UR5e contact poses and visualizing the result with `viser`.
+Tools for UR5e + Robotiq Hand-E cell assembly: marker-relative grasping, pin
+alignment and insertion, RealSense capture, and static/animated `viser` previews.
+The package also estimates planes from measured contact poses and exports MuJoCo scenes.
 
-The intended workflow is:
+All commands below run from **`surface_estimator_ur5e/`**, the directory containing
+`pyproject.toml`. From the repository root, run `cd surface_estimator_ur5e` first.
+Python 3.11 or newer is required. ROS is not required.
 
-1. Manually move a ceiling-mounted UR5e with a Robotiq Hand-E gripper until the TCP or tool tip contacts a flat surface.
-2. Record at least three robot joint poses and Cartesian TCP poses.
-3. Estimate the contacted surface plane from the measured contact positions.
-4. Inspect the fit, contact points, plane normal, TCP frames, and a simple UR5e visualization in a browser.
+| Workflow | Start here |
+| --- | --- |
+| Plan or execute assembly on the robot | [Marker-based assembly](#run-marker-based-assembly) |
+| Animate assembly without robot hardware | [Offline assembly preview](#preview-the-full-assembly-program-offline) |
+| Inspect marker, holder, and TCP frames | [Static assembly visualization](#static-assembly-visualization) |
+| Find calibrated coordinates and their units | [Calibration coordinates](#inspect-calibration-coordinates) |
+| Change settings or find the relevant code | [Code and configuration map](#code-and-configuration-map) |
+| Estimate a plane from saved contact poses | [Contact YAML](#contact-yaml-format) and [estimation](#run-estimation) |
+| Export or run a simulated scene | [MuJoCo export](#export-a-mujoco-scene) |
 
-This repository does not require ROS or a real robot connection.
+## Install
 
-## Install Without uv
+### With uv
 
-From this repository root:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -e .
-```
-
-If you prefer installing only from `requirements.txt` for local module execution:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-```
-
-## Install With uv
-
-Install `uv`, then from this repository root:
+`uv sync` installs the project and the PyRoki Git revision declared in
+[`pyproject.toml`](pyproject.toml), including the dependencies for offline IK:
 
 ```bash
 uv sync
+uv run python scripts/assembly_task.py --help
 ```
+
+### With pip
+
+Pip does not use `[tool.uv.sources]`, so install the same pinned PyRoki source explicitly:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install "pyroki @ git+https://github.com/chungmin99/pyroki.git@388e43e1fc0d0ee382968d3dd72970fd62a0450c"
+python -m pip install -e .
+```
+
+For dependency-only local module execution, `python -m pip install -r requirements.txt`
+installs the base tools; that file does not include PyRoki, which `preview-motion`
+requires. The editable install above also exposes the `surface-estimator` command.
+
+## Assembly Command Overview
+
+`assembly_task.py` dispatches to the script for each stage. Inspect its options with:
+
+```bash
+uv run python scripts/assembly_task.py marker-target --help
+```
+
+| Stage | Purpose | Hardware behavior |
+| --- | --- | --- |
+| `marker-target` | Plan or execute a selected assembly task | RTDE connection; movement/gripper commands require `--execute` |
+| `preview-motion` | Animate or solve the complete assembly plan | No robot, gripper, or camera connection |
+| `visualize` | Inspect saved marker/holder geometry and TCP targets | Reads RTDE and sets TCP by default; offline state can be supplied |
+| `holder-align` | Align an already held tray from the current TCP | RTDE connection; motion requires `--execute` |
+| `read-marker` | Save an ArUco pose in the robot base frame | RealSense + RTDE; sets TCP by default |
+| `capture-realsense` | Save color/depth frames and metadata | RealSense |
+| `image-align-sweep` | Capture images while adjusting local TCP pose | RealSense + RTDE; motion requires `--execute` |
+| `run-sequence` | Run a recorded joint sequence | Dry run is offline; RTDE/gripper connections and motion require `--execute` |
 
 ## Contact YAML Format
 
@@ -250,6 +276,226 @@ uv run python scripts/run_motion_sequence.py --execute
 
 This command sends `moveJ` commands through `RTDEControlInterface`. Keep the teach pendant/emergency stop reachable, use reduced mode if appropriate, and confirm the path is collision-free before adding `--execute`.
 
+## Run Marker-Based Assembly
+
+Choose the extent of the motion with `--task`; the default is `pick`, and motion
+requires `--execute`. Calibration and detailed stage settings are YAML overrides.
+
+| Task | Last stage |
+| --- | --- |
+| `pick` | Marker-relative grasp |
+| `align` | Grasp, four-pin rotation, and pin approach |
+| `insert` | Four-pin insertion, keeping the gripper closed |
+| `assembly` | Insertion, two-pin pickup/placement, and final tail motions |
+
+From the project directory, inspect the full plan using the robot's calibrated
+FK/IK without sending move or gripper commands:
+
+```bash
+uv run python scripts/assembly_task.py marker-target --task assembly
+```
+
+This dry run still connects to RTDE and sets the calibrated TCP by default.
+For a completely offline preview, use `preview-motion` below. Execute the plan with:
+
+```bash
+uv run python scripts/assembly_task.py marker-target --task assembly --execute
+```
+
+Calibration, gripper settings, stage switches, and safety limits are defined in
+[`scripts/assembly_config.py`](scripts/assembly_config.py), in `MotionConfig`.
+Override only the values you need in a YAML mapping.
+[`data/assembly_motion.yaml`](data/assembly_motion.yaml) starts as `{}` so defaults
+are not duplicated. Replace `{}` with the settings you want to change, for example:
+
+```yaml
+speed_m_s: 0.02
+acceleration_m_s2: 0.04
+```
+
+```bash
+uv run python scripts/assembly_task.py marker-target \
+  --task assembly --config data/assembly_motion.yaml
+```
+
+The same `--config` file works with `preview-motion`; the static `visualize`
+command retains its own CLI settings. Effective values are `MotionConfig`
+defaults, then YAML overrides, then explicit `--speed-m-s` / `--acceleration-m-s2`
+overrides. Task selection, resume mode, robot IP, marker path, and `--execute`
+remain CLI options. Unknown keys, wrong types, non-finite numbers, and invalid
+limits are rejected before connecting to the robot.
+Use `--from-current` to omit the initial joint move, or select one continuation:
+
+```bash
+uv run python scripts/assembly_task.py marker-target --task assembly --resume pins
+uv run python scripts/assembly_task.py marker-target --resume release
+```
+
+`--resume pins` starts at pin approach and follows the selected task's stopping
+point. The other resume choices are `release`, `after-close`, `tail`, and
+`tail-next`; they run only that section from the measured TCP, without the initial
+joint move or marker grasp. Add `--execute` to send the commands.
+
+Migration from the previous CLI:
+
+- `--align-to-four-pin-frame` becomes `--task align`.
+- `--align-to-four-pin-frame --insert-after-pin-approach` becomes `--task assembly`.
+- Add `--task insert` instead when insertion should finish without release/retreat.
+- `--no-start-from-initial-pose` / `--skip-initial-pose` becomes `--from-current`.
+- `--continue-…-from-current` becomes the corresponding `--resume` choice above.
+- Other calibration options move to YAML with underscores, e.g. `--offset-x-mm 144`
+  becomes `offset_x_mm: 144`. Boolean switches use explicit `true` / `false` values;
+  e.g. `--no-post-two-pin-close-image-align` becomes `post_two_pin_close_image_align: false`.
+- The empty `tail-extra` continuation and the unused `post_two_pin_after_close_final_y_mm`
+  setting were removed, including the static viewer's unused matching CLI option.
+
+## Code And Configuration Map
+
+| File in `scripts/` | Responsibility |
+| --- | --- |
+| [`assembly_task.py`](scripts/assembly_task.py) | Dispatch stage commands |
+| [`assembly_config.py`](scripts/assembly_config.py) | `MotionConfig` defaults, YAML overrides, and validation |
+| [`assembly_plan.py`](scripts/assembly_plan.py) | Target poses, clearance calculations, and IK preflight |
+| [`assembly_sequence.py`](scripts/assembly_sequence.py) | Shared preview list of moves, gripper actions, and dwells |
+| [`marker_based_motion.py`](scripts/marker_based_motion.py) | Robot/gripper/camera execution through the `Robot` session |
+| [`visualize_marker_frame.py`](scripts/visualize_marker_frame.py) | Static frames and paths drawn from the shared sequence |
+| [`preview_assembly_motion.py`](scripts/preview_assembly_motion.py) | Offline IK sampling, part attachment, and animation |
+
+Start reading execution at `Robot.marker_task`: it calls `align`, `pin_sequence`,
+`post_insert`, and `aligned_release` in assembly order. The session owns robot
+interfaces and settings; live execution recalculates from measured TCP poses at
+action boundaries. Both previews use `assembly_sequence.py` with saved image
+corrections, and tray paths follow its attach/detach events.
+
+`tcp_shift(pose, x=…, y=…, z=…)` expresses local moves in millimetres; the common
+pin-target calculation handles centering, approach, and insertion. Each setting's
+range is declared beside its default in `MotionConfig`.
+
+Shared helpers live in `src/surface_estimator_ur5e/` and are used by assembly,
+standalone alignment, camera capture, and visualization:
+
+| Module | Responsibility |
+| --- | --- |
+| `transforms.py` | UR pose conversion, local TCP offsets/rotations, point transforms |
+| `workcell_geometry.py` | Holder pin frame, tray geometry, floor clearance, shared workcell defaults |
+| `calibration.py` | Saved marker YAML and tool-to-camera calibration XML |
+| `robot_io.py` | Lazy RTDE connections, TCP reads and offset setting |
+
+These helpers take poses, paths, and values directly. The motion planner no
+longer imports the visualization script. UR poses use metres and rotation
+vectors in radians; tray geometry takes 4×4 transforms. The separate joint
+sequence retains its own TCP calibration.
+
+Configuration and model sources:
+
+| Information | Authoritative source |
+| --- | --- |
+| Assembly stage defaults | `MotionConfig` in `scripts/assembly_config.py`; YAML contains overrides only |
+| Assembly TCP, initial pose, holder/tray placement | `workcell_geometry.py` |
+| URDF description name, joint and actuator order | `robot_model.py` |
+| Marker measurement | `data/markers/aruco_364_in_base.yaml` |
+| Hand-eye transform and camera intrinsics | `data/calibration/realsense_ur5e/Calibration.xml` and `camera_intrinsics.yaml` |
+| Physical robot FK/IK | UR controller, via RTDE |
+| Offline FK/IK | The `ur5e_description` URDF loaded through `robot_descriptions` |
+| Approximate visualization fallback | DH parameters in `SimpleUR5eVisualizer` |
+| MuJoCo robot model | `assets/universal_robots_ur5e/ur5e.xml` |
+
+The XML files in `models/` are generated scenes: a fixed visualization, an
+actuated robot, and a tray/gripper simulation. They contain exported model data
+and are not independent calibration sources. The two motion-sequence YAML files
+contain different recorded trajectories. Saved targets, contact files, and image
+metadata retain the settings used when they were recorded.
+
+The joint-sequence TCP remains `[0, 0, 0.152, 0, 0, 0]`, while assembly uses
+`[0, 0, 0.158, -1.5707, 0, 0]`. The static `visualize` command also retains its
+existing tail-stage offsets, which differ from execution defaults. Use
+`preview-motion` for playback of the current assembly settings. These differences
+must be resolved against the actual setup before treating the modes as equivalent.
+
+## Inspect Calibration Coordinates
+
+For the marker's position and orientation in the **robot base frame**, open
+[`data/markers/aruco_364_in_base.yaml`](data/markers/aruco_364_in_base.yaml).
+If the command uses `--marker-pose`, inspect that file instead.
+
+| Field under `pose_in_base` | Meaning |
+| --- | --- |
+| `translation_m` | Marker-center X, Y, Z in metres |
+| `rotation_rpy_deg` | Saved roll, pitch, yaw in degrees |
+| `rotation_quaternion_xyzw` | The same orientation as an XYZW quaternion |
+| `transform_matrix` | 4×4 transform mapping marker coordinates into robot-base coordinates; last column contains translation in metres |
+
+The loader uses `transform_matrix` when present. The other fields are alternate
+representations of the saved pose, not separate calibrations; changing only
+`translation_m` or `rotation_rpy_deg` will not override an existing matrix.
+The bundled measurement currently has X = **−80.046 mm**, Y = **−467.841 mm**,
+Z = **997.781 mm**. Read the YAML for the full precision and any newer capture;
+`source.captured_at` and `capture_quality` identify the capture and its spread.
+
+Other calibration and placement values:
+
+| Information | File and field |
+| --- | --- |
+| Camera pose expressed in the calibrated TCP/tool frame | [`Calibration.xml`](data/calibration/realsense_ur5e/Calibration.xml), `CalibrationResult / MovingTransform frame="Camera"`: `Vector3D` in metres and `Rotation3D/Rotation3D` |
+| Camera intrinsics used for marker detection | [`camera_intrinsics.yaml`](data/calibration/realsense_ur5e/camera_intrinsics.yaml) |
+| Default assembly TCP offset | [`workcell_geometry.py`](src/surface_estimator_ur5e/workcell_geometry.py), `DEFAULT_TCP_OFFSET_UR`: XYZ in metres, rotation vector in radians |
+| Default holder placement relative to the marker | The same file's `DEFAULT_ASSEMBLY_ORIGIN_*_MM`, `DEFAULT_ASSEMBLY_RPY_DEG`, and `DEFAULT_ASSEMBLY_LOCAL_YAW_DEG` |
+| Overrides used by a particular assembly run | The YAML passed to `--config`, for example [`data/assembly_motion.yaml`](data/assembly_motion.yaml); omitted settings use `MotionConfig` defaults |
+
+The current marker pose comes from the marker YAML above. The XML's
+`StaticTransform frame="Marker"` belongs to the hand-eye calibration run.
+
+To compare the original measurement with the floor-constrained frame visually:
+
+```bash
+uv run python scripts/assembly_task.py visualize \
+  --show-raw --show-holder --show-plan-frames
+```
+
+The default `floor` mode keeps the measured marker position but constrains its
+orientation to the horizontal floor. Robot-base +Z points physically downward
+in this ceiling-mounted setup. `--show-raw` also draws the original measured
+frame; it does not change the frame used for target calculation. Use
+`--marker-frame-mode raw` to calculate targets from the measured orientation.
+
+This visualization reads robot state and sets the configured TCP by default,
+without sending motion commands. See [static visualization](#static-assembly-visualization)
+for supplying an offline robot state.
+
+## Regression Checks
+
+Hardware-free regression tests compare motion targets, speeds, gripper commands,
+and dwell times against saved traces, including measured TCP offsets and stage
+continuations. Preview tests also compare static frames, interpolated TCP/tray
+paths, complete tail stages, and camera coordinates. See
+[`tests/fixtures/README.md`](tests/fixtures/README.md) for baseline provenance.
+
+```bash
+uv run --with pytest python -m pytest -q tests
+uv run --with ruff ruff check scripts src tests
+```
+
+With an activated environment containing `pytest`, use `python -m pytest -q tests`.
+The test doubles replace robot/gripper connections; they do not establish physical
+reachability or collision clearance.
+
+## Static Assembly Visualization
+
+Inspect the saved marker and holder against the robot's current TCP, including
+the optional insertion and later stage frames:
+
+```bash
+uv run python scripts/assembly_task.py visualize \
+  --show-holder --show-tray --show-plan-frames --insert-after-pin-approach
+```
+
+This command reads robot state and sets the assembly TCP by default; it sends no
+motion commands. Adding `--show-motion-trajectory` uses controller FK/IK to draw
+the sampled path. Supplying both `--q-deg` and `--tcp-pose-ur` allows static frame
+inspection without RTDE when `--show-motion-trajectory` is omitted.
+Use `preview-motion` below for a completely offline animated trajectory using
+the current assembly settings; the static viewer retains its legacy tail offsets.
+
 ## Preview The Full Assembly Program Offline
 
 Animate the Cartesian targets and gripper events used by
@@ -258,6 +504,18 @@ Animate the Cartesian targets and gripper events used by
 ```bash
 uv run python scripts/assembly_task.py preview-motion
 ```
+
+The default task is `assembly`; `--task align` and `--task insert` stop earlier.
+To use the same overrides as the execution command:
+
+```bash
+uv run python scripts/assembly_task.py preview-motion --config data/assembly_motion.yaml
+```
+
+This mode starts from the saved initial pose and saved image corrections.
+It does not accept `--execute`, `--from-current`, `--resume`, `--task pick`, or
+live camera search (`auto_pin_image_align: true`). The first URDF load may
+download and cache the robot description even though no robot hardware is used.
 
 Then open the URL printed by `viser`, normally `http://localhost:8080`. The
 preview starts from the saved initial joint pose, uses the saved marker and image

@@ -10,6 +10,18 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 
+DEFAULT_ROBOT_DESCRIPTION = "ur5e_description"
+DEFAULT_JOINT_ORDER = (
+    "shoulder_pan_joint",
+    "shoulder_lift_joint",
+    "elbow_joint",
+    "wrist_1_joint",
+    "wrist_2_joint",
+    "wrist_3_joint",
+)
+UR5E_ACTUATOR_NAMES = tuple(name.removesuffix("_joint") for name in DEFAULT_JOINT_ORDER)
+
+
 class RobotVisualizerBase(Protocol):
     """Protocol for robot visualizers."""
 
@@ -75,7 +87,7 @@ class URDFRobotVisualizer:
     """URDF mesh visualization using viser and robot_descriptions."""
 
     urdf_path: Path | None = None
-    description_name: str = "ur5e_description"
+    description_name: str = DEFAULT_ROBOT_DESCRIPTION
 
     def add_to_scene(
         self,

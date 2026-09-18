@@ -4,23 +4,33 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
-from pathlib import Path
 import shutil
 import subprocess
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import cv2
 import numpy as np
 import pyrealsense2 as rs
-from scipy.spatial.transform import Rotation
 import yaml
 
 from surface_estimator_ur5e.live_robot import DEFAULT_ROBOT_IP
+from surface_estimator_ur5e.robot_io import (
+    connect_rtde_control as open_rtde_control,
+)
+from surface_estimator_ur5e.robot_io import (
+    connect_rtde_receive as open_rtde_receive,
+)
+from surface_estimator_ur5e.robot_io import (
+    set_tcp_offset,
+)
+from surface_estimator_ur5e.transforms import (
+    pose_with_local_xz_adjustment as pose_with_local_adjustment,
+)
+from surface_estimator_ur5e.workcell_geometry import DEFAULT_TCP_OFFSET_UR
 
-
-DEFAULT_TCP_OFFSET_UR = [0.0, 0.0, 0.158, -1.5707, 0.0, 0.0]
 DEFAULT_REALSENSE_SERIAL = "261322073147"
 
 
@@ -145,24 +155,6 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--timeout-ms must be positive.")
 
 
-def open_rtde_control(robot_ip: str) -> Any:
-    from rtde_control import RTDEControlInterface
-
-    return RTDEControlInterface(robot_ip)
-
-
-def open_rtde_receive(robot_ip: str) -> Any:
-    from rtde_receive import RTDEReceiveInterface
-
-    return RTDEReceiveInterface(robot_ip)
-
-
-def set_tcp_offset(rtde_control: Any, tcp_offset_ur: list[float]) -> None:
-    tcp_offset = [float(value) for value in tcp_offset_ur]
-    if not rtde_control.setTcp(tcp_offset):
-        raise RuntimeError(f"Failed to set active TCP offset to {tcp_offset}.")
-
-
 def start_color_pipeline(args: argparse.Namespace) -> rs.pipeline:
     pipeline = rs.pipeline()
     config = rs.config()
@@ -213,22 +205,6 @@ def capture_color(pipeline: rs.pipeline, timeout_ms: int) -> tuple[np.ndarray, d
         "coeffs": [float(value) for value in intrinsics.coeffs],
     }
     return image, intrinsics_data
-
-
-def pose_with_local_adjustment(
-    start_pose_ur: np.ndarray,
-    axis: str,
-    angle_deg: float,
-    x_offset_mm: float,
-    z_offset_mm: float,
-) -> np.ndarray:
-    start_rotation = Rotation.from_rotvec(start_pose_ur[3:6])
-    local_delta = Rotation.from_euler(axis, angle_deg, degrees=True)
-    target_pose = start_pose_ur.copy()
-    local_translation_m = np.array([x_offset_mm, 0.0, z_offset_mm], dtype=float) / 1000.0
-    target_pose[:3] = start_pose_ur[:3] + start_rotation.as_matrix() @ local_translation_m
-    target_pose[3:6] = (start_rotation * local_delta).as_rotvec()
-    return target_pose
 
 
 def fmt_pose(pose: np.ndarray) -> str:
